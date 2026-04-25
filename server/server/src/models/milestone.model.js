@@ -28,6 +28,20 @@ const milestoneSchema = new mongoose.Schema(
             enum: ["pending", "in_progress", "completed", "approved", "rejected"],
             default: "pending",
         },
+        paymentStatus: {
+            type: String,
+            enum: ["not_required", "pending_payment", "released"],
+            default: "pending_payment",
+        },
+        paymentTransaction: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Transaction",
+            default: null,
+        },
+        paymentReleasedAt: {
+            type: Date,
+            default: null,
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

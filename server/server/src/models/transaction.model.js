@@ -36,6 +36,16 @@ const transactionSchema = new mongoose.Schema(
             type: String,
             default: "eSewa",
         },
+        purpose: {
+            type: String,
+            enum: ["initial", "final", "milestone"],
+            default: "final",
+        },
+        milestoneId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Milestone",
+            default: null,
+        },
         transactionId: {
             type: String,
         },

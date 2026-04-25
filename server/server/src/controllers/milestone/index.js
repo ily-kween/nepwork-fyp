@@ -6,3 +6,4 @@ export { approveMilestone } from "./approveMilestone.controller.js";
 export { rejectMilestone } from "./rejectMilestone.controller.js";
 export { updateMilestone } from "./updateMilestone.controller.js";
 export { deleteMilestone } from "./deleteMilestone.controller.js";
+export { getMilestoneTransaction } from "./getMilestoneTransaction.controller.js";

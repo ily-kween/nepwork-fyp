@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import { ApiError, ApiResponse, asyncHandler, sendNotification } from "../../utils/index.js";
-import { Job, JobApplication } from "../../models/job.model.js";
+import { Job, JobApplication, Milestone } from "../../models/index.js";
 import { Notification } from "../../models/index.js";
+import { buildContractSnapshot } from "../../utils/contract.js";
 
 export const acceptFreelancer = asyncHandler(async (req, res) => {
     const { jobId } = req.params;
@@ -42,9 +43,30 @@ export const acceptFreelancer = asyncHandler(async (req, res) => {
     if (!application)
         throw new ApiError(400, true, "Freelancer has not applied yet");
 
+    const milestones = await Milestone.find({ projectId: job._id }).sort({ order: 1, createdAt: 1 });
+    const snapshot = buildContractSnapshot({ job, milestones });
+
     job.acceptedFreelancer = acceptedFreelancerId;
     job.acceptedApplication = application;
-    job.status = "assigned";
+    job.status = "contract_pending";
+    job.contract = {
+        status: "pending_signature",
+        totalCost: snapshot.totalCost,
+        initialPaymentAmount: snapshot.initialPaymentAmount,
+        paymentTerms: snapshot.paymentTerms,
+        timelineStart: snapshot.timelineStart,
+        timelineEnd: snapshot.timelineEnd,
+        clientApproved: false,
+        freelancerApproved: false,
+        clientApprovedAt: null,
+        freelancerApprovedAt: null,
+        activatedAt: null,
+        initialPaymentDone: false,
+        initialPaymentAt: null,
+        initialTransaction: null,
+        finalTransaction: null,
+        milestones: snapshot.milestones,
+    };
 
     await job.save();
 
@@ -52,8 +74,8 @@ export const acceptFreelancer = asyncHandler(async (req, res) => {
         receiverId: acceptedFreelancerId,
         senderId: userId,
         projectId: job._id,
-        title: "Project Application Accepted",
-        message: "Your request has been accepted. The project is now assigned to you.",
+        title: "Project Contract Ready",
+        message: "Your application was accepted. Please review and approve the contract before work starts.",
         type: "job_accepted",
         link: `/jobs/${job._id}`
     });

@@ -9,6 +9,7 @@ import {
     rejectMilestone,
     updateMilestone,
     deleteMilestone,
+    getMilestoneTransaction,
 } from "../controllers/index.js";
 
 export const milestoneRouter = Router();
@@ -34,7 +35,7 @@ milestoneRouter.post(
     "/",
     authenticate,
     verified,
-    clientOnly,
+    freelancerOnly,
     createMilestone
 );
 
@@ -70,7 +71,7 @@ milestoneRouter.patch(
     "/:milestoneId",
     authenticate,
     verified,
-    clientOnly,
+    freelancerOnly,
     updateMilestone
 );
 
@@ -79,6 +80,14 @@ milestoneRouter.delete(
     "/:milestoneId",
     authenticate,
     verified,
-    clientOnly,
+    freelancerOnly,
     deleteMilestone
+);
+
+// Create or fetch the payment transaction for an approved milestone
+milestoneRouter.get(
+    "/transaction/:milestoneId",
+    authenticate,
+    verified,
+    getMilestoneTransaction
 );

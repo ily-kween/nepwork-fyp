@@ -23,6 +23,9 @@ import {
     getFreelancerJobs,
     getTransaction,
     payTransaction,
+    getJobContract,
+    approveJobContract,
+    downloadJobContractPdf,
 } from "../controllers/index.js";
 
 export const jobRouter = Router();
@@ -71,6 +74,9 @@ jobRouter.get(
     getFreelancerJobs,
 );
 jobRouter.get("/overview/:jobId", authenticate, getJobOverview);
+jobRouter.get("/:jobId/contract", authenticate, getJobContract);
+jobRouter.patch("/:jobId/contract/approve", authenticate, verified, approveJobContract);
+jobRouter.get("/:jobId/contract/pdf", authenticate, downloadJobContractPdf);
 
 // Transaction
 jobRouter.get("/transaction/:jobId", authenticate, getTransaction);

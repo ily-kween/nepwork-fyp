@@ -17,14 +17,14 @@ export const deleteMilestone = asyncHandler(async (req, res) => {
 
     const project = milestone.projectId;
 
-    // Only client can delete milestones
-    if (project.postedBy.toString() !== userId) {
-        throw new ApiError(401, false, "Only project client can delete milestones");
+    // Only assigned freelancer can delete milestones
+    if (project.acceptedFreelancer?.toString() !== userId) {
+        throw new ApiError(401, false, "Only assigned freelancer can delete milestones");
     }
 
-    // Cannot delete approved milestones
-    if (milestone.status === "approved") {
-        throw new ApiError(400, false, "Cannot delete approved milestones");
+    // Cannot delete submitted or approved milestones
+    if (["completed", "approved"].includes(milestone.status)) {
+        throw new ApiError(400, false, "Cannot delete submitted or approved milestones");
     }
 
     await Milestone.findByIdAndDelete(milestoneId);

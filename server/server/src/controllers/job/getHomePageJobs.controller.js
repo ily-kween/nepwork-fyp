@@ -12,7 +12,8 @@ export const getHomePageJobs = asyncHandler(async (req, res) => {
             .populate({
                 path: "postedBy",
                 select: "name avatar _id",
-            });
+            })
+            .sort({ createdAt: -1 });
         return res
             .status(200)
             .json(new ApiResponse(200, true, false, "fetched all jobs", jobs));
@@ -39,7 +40,7 @@ export const getHomePageJobs = asyncHandler(async (req, res) => {
         const jobs = await Job.find({ status: "open" }).populate({
             path: "postedBy",
             select: "name avatar _id",
-        });
+        }).sort({ createdAt: -1 });
         return jobs;
     }
 });

@@ -9,7 +9,8 @@ export const getAllJobs = asyncHandler(async (_, res) => {
             path: "postedBy",
             select: "name avatar ",
         })
-        .populate("acceptedFreelancer");
+        .populate("acceptedFreelancer")
+        .sort({ createdAt: -1 });
 
     return res
         .status(200)
@@ -19,7 +20,8 @@ export const getAllJobs = asyncHandler(async (_, res) => {
 export const getJobsPostedByCurrentUser = asyncHandler(async (req, res) => {
     const jobs = await Job.find({ postedBy: req.user._id })
         .select("-startTime -endTime -workedTimeInSec")
-        .populate("acceptedFreelancer", "name avatar");
+        .populate("acceptedFreelancer", "name avatar")
+        .sort({ createdAt: -1 });
 
     return res
         .status(200)
@@ -64,7 +66,7 @@ export const getOpenJobs = asyncHandler(async (req, res) => {
 
     const jobs = await Job.find({ postedBy: userId, status: "open" }).select(
         "-startTime -endTime -workedTimeInSec -payment",
-    );
+    ).sort({ createdAt: -1 });
     return res
         .status(200)
         .json(new ApiResponse(200, true, false, "Jobs fetched", jobs));

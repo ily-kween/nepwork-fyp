@@ -20,6 +20,10 @@ export const updateJobStatusByFreelancer = asyncHandler(async (req, res) => {
         throw new ApiError(403, true, "Only the assigned freelancer can update this job");
     }
 
+    if (!job.contract?.initialPaymentDone || job.contract?.status !== "active") {
+        throw new ApiError(400, true, "Contract approval and initial payment must be completed before work starts");
+    }
+
     let notificationTitle = "";
     let notificationMessage = "";
     let notificationType = "";

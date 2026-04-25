@@ -34,6 +34,7 @@ export const approveMilestone = asyncHandler(async (req, res) => {
     // Update milestone status
     milestone.status = "approved";
     milestone.approvedAt = new Date();
+    milestone.paymentStatus = "pending_payment";
     milestone.rejectionReason = null; // Clear any previous rejection reason
     await milestone.save();
 

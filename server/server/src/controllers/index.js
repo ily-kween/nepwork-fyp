@@ -38,6 +38,7 @@ import { deleteJob } from "./job/deleteJob.controller.js";
 import { applyJob } from "./job/applyJob.controller.js";
 import { getApplicants } from "./job/getApplicants.controller.js";
 import { acceptFreelancer } from "./job/acceptFreelancer.controller.js";
+import { getJobContract, approveJobContract, downloadJobContractPdf } from "./job/contract.controller.js";
 import {
     followUser,
     getFollowing,
@@ -74,6 +75,7 @@ import {
     rejectMilestone,
     updateMilestone,
     deleteMilestone,
+    getMilestoneTransaction,
 } from "./milestone/index.js";
 import {
     createReview,
@@ -117,6 +119,9 @@ export {
     applyJob,
     getApplicants,
     acceptFreelancer,
+    getJobContract,
+    approveJobContract,
+    downloadJobContractPdf,
     followUser,
     unFollowUser,
     getFollowers,
@@ -151,6 +156,7 @@ export {
     rejectMilestone,
     updateMilestone,
     deleteMilestone,
+    getMilestoneTransaction,
     createReview,
     getFreelancerReviews,
     getFreelancerRating,

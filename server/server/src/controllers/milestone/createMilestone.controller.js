@@ -25,9 +25,13 @@ export const createMilestone = asyncHandler(async (req, res) => {
         throw new ApiError(404, false, "Project not found");
     }
 
-    // Only client (project creator) can create milestones
-    if (project.postedBy.toString() !== userId) {
-        throw new ApiError(401, false, "Only project client can create milestones");
+    // Only the assigned freelancer can create milestones
+    if (project.acceptedFreelancer?.toString() !== userId) {
+        throw new ApiError(401, false, "Only assigned freelancer can create milestones");
+    }
+
+    if (!["assigned", "in_progress", "pending_review", "completed", "paid"].includes(project.status)) {
+        throw new ApiError(400, false, "Milestones can only be created once the project is assigned");
     }
 
     // Create milestone
@@ -39,6 +43,8 @@ export const createMilestone = asyncHandler(async (req, res) => {
         deadline: new Date(deadline),
         createdBy: userId,
         order: order || 0,
+        status: "pending",
+        paymentStatus: "pending_payment",
     });
 
     await milestone.save();

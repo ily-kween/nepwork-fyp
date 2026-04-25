@@ -51,6 +51,8 @@ export const getJobOverview = asyncHandler(async (req, res) => {
               : 0,
         payment: job.payment,
         jobStatus: job.status,
+        contract: job.contract,
+        contractDownloadUrl: `/jobs/${job._id}/contract/pdf`,
     };
 
     return res

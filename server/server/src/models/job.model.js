@@ -58,6 +58,81 @@ const jobSchema = new mongoose.Schema(
             default: null,
         },
 
+        contract: {
+            status: {
+                type: String,
+                enum: ["draft", "pending_signature", "pending_payment", "active"],
+                default: "draft",
+            },
+            totalCost: {
+                type: Number,
+                default: 0,
+            },
+            initialPaymentAmount: {
+                type: Number,
+                default: 0,
+            },
+            paymentTerms: {
+                type: String,
+                default: "10% upfront before work starts; remaining balance after project completion.",
+            },
+            timelineStart: {
+                type: Date,
+                default: null,
+            },
+            timelineEnd: {
+                type: Date,
+                default: null,
+            },
+            clientApproved: {
+                type: Boolean,
+                default: false,
+            },
+            freelancerApproved: {
+                type: Boolean,
+                default: false,
+            },
+            clientApprovedAt: {
+                type: Date,
+                default: null,
+            },
+            freelancerApprovedAt: {
+                type: Date,
+                default: null,
+            },
+            activatedAt: {
+                type: Date,
+                default: null,
+            },
+            initialPaymentDone: {
+                type: Boolean,
+                default: false,
+            },
+            initialPaymentAt: {
+                type: Date,
+                default: null,
+            },
+            initialTransaction: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Transaction",
+                default: null,
+            },
+            finalTransaction: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Transaction",
+                default: null,
+            },
+            milestones: [
+                {
+                    title: String,
+                    description: String,
+                    amount: Number,
+                    deadline: Date,
+                    order: Number,
+                },
+            ],
+        },
+
         applications: [
             {
                 type: mongoose.Schema.Types.ObjectId,
@@ -111,7 +186,7 @@ const jobSchema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["open", "closed", "assigned", "in_progress", "pending_review", "completed", "paid"],
+            enum: ["open", "closed", "contract_pending", "assigned", "in_progress", "pending_review", "completed", "paid"],
             default: "open",
         },
     },
