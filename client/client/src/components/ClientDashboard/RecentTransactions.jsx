@@ -5,6 +5,11 @@ import Loader from "../Loader";
 import { useNavigate } from "react-router";
 import { useAuth } from "../../stores";
 import { FiActivity, FiDollarSign } from "react-icons/fi";
+import {
+    applyTransactionFilters,
+    loadTransactionFilters,
+    toTransactionApiParams,
+} from "../../utils/transactionFilters";
 
 function RecentTransactions({ role }) {
     const { userData } = useAuth();
@@ -15,11 +20,14 @@ function RecentTransactions({ role }) {
     const fetchSetRecentTxns = async () => {
         setFetching(true);
         try {
-            const response = await api.get("/user/transactions/all");
+            const storedFilters = loadTransactionFilters();
+            const response = await api.get("/user/transactions/all", {
+                params: toTransactionApiParams(storedFilters),
+            });
             let txns = response.data.data || [];
             const userId = userData?._id;
 
-            const userTxns = txns.filter(t => 
+            const userTxns = applyTransactionFilters(txns, storedFilters).filter(t => 
                 role === 'freelancer' ? (t.receiver?._id || t.receiver) === userId : (t.initiator?._id || t.initiator) === userId
             ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 

@@ -5,9 +5,14 @@ import { useNotification } from "../stores";
 import { FiBell, FiTrash2, FiCheck } from "react-icons/fi";
 import { MdPayment, MdWork, MdNotifications } from "react-icons/md";
 
-const NotificationDropdown = ({ onClose }) => {
+const NotificationDropdown = ({ onClose, setShowNotifications }) => {
     const { notifications, markAsRead, deleteNotification, markAllAsRead } = useNotification();
     const navigate = useNavigate();
+    const closeDropdown = typeof onClose === "function"
+        ? onClose
+        : typeof setShowNotifications === "function"
+            ? () => setShowNotifications(false)
+            : () => {};
 
     const getIcon = (type) => {
         switch (type) {
@@ -30,7 +35,7 @@ const NotificationDropdown = ({ onClose }) => {
         if (notification.link) {
             navigate(notification.link);
         }
-        onClose();
+        closeDropdown();
     };
 
     return (
@@ -105,7 +110,7 @@ const NotificationDropdown = ({ onClose }) => {
             
             <div className="p-3 border-t border-secondary text-center bg-gray-50">
                 <button 
-                    onClick={() => { navigate("/notifications"); onClose(); }}
+                    onClick={() => { navigate("/notifications"); closeDropdown(); }}
                     className="text-sm text-primary font-bold hover:text-primary/80 transition-colors"
                 >
                     View all notifications

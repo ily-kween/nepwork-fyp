@@ -12,12 +12,47 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
 
     const statusStyles = {
         open: "bg-green-500 text-white",
+        contract_pending: "bg-amber-500 text-white",
         assigned: "bg-purple-500 text-white",
         in_progress: "bg-blue-500 text-white",
         pending_review: "bg-orange-500 text-white",
         completed: "bg-teal-500 text-white",
         closed: "bg-red-500 text-white",
         paid: "bg-emerald-600 text-white",
+    };
+
+    const contract = data?.contract;
+    const isClient = !isSelectedFreelancer;
+    const needsInitialPayment = contract?.status === "pending_payment" && !contract?.initialPaymentDone;
+    const canApproveContract = contract && (!contract.clientApproved || !contract.freelancerApproved);
+
+    const downloadContractPdf = async () => {
+        try {
+            const response = await api.get(`/jobs/${jobId}/contract/pdf`, {
+                responseType: "blob",
+            });
+            const pdfUrl = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+            const link = document.createElement("a");
+            link.href = pdfUrl;
+            link.setAttribute("download", `contract-${jobId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(pdfUrl);
+            toast.success("Contract PDF downloaded");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to download contract PDF");
+        }
+    };
+
+    const approveContract = async () => {
+        try {
+            await api.patch(`/jobs/${jobId}/contract/approve`);
+            toast.success("Contract approval saved");
+            fetchSetOverviewData();
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to approve contract");
+        }
     };
 
     const fetchSetOverviewData = async () => {
@@ -104,20 +139,32 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                             {!data?.payment?.done && !isSelectedFreelancer && (
                                 <Button
                                     onClick={() =>
-                                        navigate(`/jobs/${jobId}/pay`)
+                                        navigate(
+                                            needsInitialPayment
+                                                ? `/jobs/${jobId}/pay?stage=initial`
+                                                : `/jobs/${jobId}/pay`,
+                                        )
                                     }
-                                    disabled={data?.jobStatus !== "completed"}
+                                    disabled={
+                                        needsInitialPayment
+                                            ? !contract?.clientApproved || !contract?.freelancerApproved
+                                            : data?.jobStatus !== "completed"
+                                    }
                                     variant="filled"
                                     className={"w-full font-bold"}
                                 >
-                                    {data?.jobStatus === "completed"
-                                        ? "Pay Now"
-                                        : "Project not completed"}
+                                    {needsInitialPayment
+                                        ? "Pay Contract Deposit"
+                                        : data?.jobStatus === "completed"
+                                            ? "Pay Now"
+                                            : contract?.status === "pending_signature"
+                                                ? "Awaiting contract approval"
+                                                : "Project not completed"}
                                 </Button>
                             )}
 
                             {/* Freelancer Actions */}
-                            {isSelectedFreelancer && data?.jobStatus === "assigned" && (
+                            {isSelectedFreelancer && data?.jobStatus === "assigned" && contract?.status === "active" && (
                                 <Button
                                     variant="filled"
                                     className="w-full font-bold mt-2"
@@ -134,7 +181,7 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                                     Start Project
                                 </Button>
                             )}
-                            {isSelectedFreelancer && data?.jobStatus === "in_progress" && (
+                            {isSelectedFreelancer && data?.jobStatus === "in_progress" && contract?.status === "active" && (
                                 <Button
                                     variant="filled"
                                     className="w-full font-bold mt-2"
@@ -150,6 +197,81 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                                 >
                                     Mark as Completed
                                 </Button>
+                            )}
+
+                            {isSelectedFreelancer && contract?.status === "pending_signature" && (
+                                <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                                    <div>
+                                        <p className="text-sm font-bold text-amber-800">Contract approval required</p>
+                                        <p className="text-sm text-amber-700 mt-1">
+                                            Review the contract PDF, approve it, and wait for the client deposit before starting work.
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <Button
+                                            variant="filled"
+                                            className="w-full font-bold bg-amber-600 hover:bg-amber-700"
+                                            onClick={downloadContractPdf}
+                                        >
+                                            Download Contract PDF
+                                        </Button>
+                                        {canApproveContract && (
+                                            <Button
+                                                variant="filled"
+                                                className="w-full font-bold bg-slate-900 hover:bg-slate-800"
+                                                onClick={approveContract}
+                                            >
+                                                Approve Contract
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {isClient && contract && (
+                                <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="text-sm font-bold text-gray-900">Contract Status</p>
+                                            <p className="text-sm text-gray-600 capitalize">{contract.status?.replaceAll("_", " ")}</p>
+                                        </div>
+                                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">
+                                            {contract.clientApproved && contract.freelancerApproved ? "Ready for payment" : "Waiting for signatures"}
+                                        </span>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                                        <div className="rounded-lg bg-gray-50 p-3">
+                                            <p className="text-gray-500">Client</p>
+                                            <p className="font-semibold text-gray-900">{contract.clientApproved ? "Approved" : "Pending"}</p>
+                                        </div>
+                                        <div className="rounded-lg bg-gray-50 p-3">
+                                            <p className="text-gray-500">Freelancer</p>
+                                            <p className="font-semibold text-gray-900">{contract.freelancerApproved ? "Approved" : "Pending"}</p>
+                                        </div>
+                                        <div className="rounded-lg bg-gray-50 p-3">
+                                            <p className="text-gray-500">Deposit</p>
+                                            <p className="font-semibold text-gray-900">Rs. {contract.initialPaymentAmount?.toLocaleString?.() ?? contract.initialPaymentAmount}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col gap-2 sm:flex-row">
+                                        <Button
+                                            variant="filled"
+                                            className="w-full sm:w-auto font-bold"
+                                            onClick={downloadContractPdf}
+                                        >
+                                            Download Contract PDF
+                                        </Button>
+                                        {canApproveContract && (
+                                            <Button
+                                                variant="filled"
+                                                className="w-full sm:w-auto font-bold bg-slate-900 hover:bg-slate-800"
+                                                onClick={approveContract}
+                                            >
+                                                Approve Contract
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
                             )}
 
                             {/* Client Actions */}

@@ -38,7 +38,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import TotalEarnings from "./FreelancerDashboard/TotalEarnings";
 import FreelancerProjects from "./FreelancerDashboard/FreelancerProjects";
 import QuickChat from "./QuickChat";
-import Milestones from "./Milestones";
+import Milestones from "./MilestonesV2";
 import ReviewModal from "./ReviewModal";
 import ReviewsDisplay from "./ReviewsDisplay";
 import ReviewsSummary from "./ReviewsSummary";

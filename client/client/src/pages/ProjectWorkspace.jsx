@@ -544,7 +544,7 @@ function ProjectWorkspace() {
                                                                                     )}</span>
                                                                         </p>
                                                                     </div>
-                                                                    {isClient && (
+                                                                    {isFreelancer && (
                                                                         <button
                                                                             onClick={() =>
                                                                                 startEditMilestone(milestone)

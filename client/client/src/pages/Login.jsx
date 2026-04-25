@@ -67,7 +67,18 @@ function Login() {
             })
             .catch((err) => {
                 console.error(err.message);
-                setResMsg(err.response.data.message);
+                let errorMessage = "Login failed. Please try again.";
+                
+                if (err.response?.data?.message) {
+                    errorMessage = err.response.data.message;
+                } else if (err.message === "Network Error" || !err.response) {
+                    errorMessage = "Service is currently unavailable. Please check your connection and try again.";
+                } else if (err.response?.status >= 500) {
+                    errorMessage = "Server is temporarily unavailable. Please try again later.";
+                }
+                
+                setResMsg(errorMessage);
+                toast.error(errorMessage);
             });
     };
 

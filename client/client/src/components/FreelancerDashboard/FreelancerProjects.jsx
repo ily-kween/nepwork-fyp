@@ -63,19 +63,25 @@ const FreelancerProjects = () => {
 
     const filteredJobs = (jobs || []).filter((job) => {
         if (selectedFilter === "all") return true;
-        if (selectedFilter === "ongoing") return ["assigned", "in_progress"].includes(job.status);
+        if (selectedFilter === "ongoing") return ["contract_pending", "assigned", "in_progress"].includes(job.status);
         if (selectedFilter === "applied") return job.status === "open";
         return job.status === selectedFilter;
     });
 
     const statusStyles = {
         open: "bg-green-100 text-green-800",
+        contract_pending: "bg-amber-100 text-amber-800",
         assigned: "bg-purple-100 text-purple-800",
         in_progress: "bg-blue-100 text-blue-800",
         pending_review: "bg-orange-100 text-orange-800",
         completed: "bg-teal-100 text-teal-800",
         closed: "bg-gray-100 text-gray-800",
         paid: "bg-emerald-100 text-emerald-800",
+    };
+
+    const getStatusLabel = (status) => {
+        if (status === "contract_pending") return "contract pending";
+        return status.replace("_", " ");
     };
 
     if (loading && jobs.length === 0) return <Loader />;
@@ -85,7 +91,7 @@ const FreelancerProjects = () => {
             {/* Quick Stats Grid for Freelancer */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[
-                    { label: "Ongoing Projects", value: jobs.filter(j => ["assigned", "in_progress", "pending_review"].includes(j.status)).length, icon: <FiLoader className="w-5 h-5" />, color: "blue" },
+                    { label: "Ongoing Projects", value: jobs.filter(j => ["contract_pending", "assigned", "in_progress", "pending_review"].includes(j.status)).length, icon: <FiLoader className="w-5 h-5" />, color: "blue" },
                     { label: "Completed Projects", value: jobs.filter(j => ["completed", "paid"].includes(j.status)).length, icon: <FiCheckCircle className="w-5 h-5" />, color: "emerald" },
                     { label: "Total Applications", value: jobs.length, icon: <FiMessageSquare className="w-5 h-5" />, color: "amber" }
                 ].map((stat, i) => (
@@ -134,8 +140,9 @@ const FreelancerProjects = () => {
                             <ProjectCard 
                                 key={job._id} 
                                 job={job} 
-                                isOngoing={["assigned", "in_progress", "pending_review"].includes(job.status)}
+                                isOngoing={["contract_pending", "assigned", "in_progress", "pending_review"].includes(job.status)}
                                 statusStyles={statusStyles}
+                                getStatusLabel={getStatusLabel}
                                 calculateEarned={calculateEarned}
                                 handleUpdateStatus={handleUpdateStatus}
                                 updatingStatus={updatingStatus}
@@ -157,7 +164,7 @@ const FreelancerProjects = () => {
     );
 };
 
-const ProjectCard = ({ job, isOngoing, statusStyles, calculateEarned, handleUpdateStatus, updatingStatus, setQuickChatUser }) => {
+const ProjectCard = ({ job, isOngoing, statusStyles, getStatusLabel, calculateEarned, handleUpdateStatus, updatingStatus, setQuickChatUser }) => {
     return (
         <div className={`group p-6 rounded-2xl border transition-all duration-300 ${isOngoing ? 'bg-primary/[0.02] border-primary/10 shadow-sm hover:shadow-md' : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-md'}`}>
             <div className="flex flex-col lg:flex-row justify-between gap-6">
@@ -165,7 +172,7 @@ const ProjectCard = ({ job, isOngoing, statusStyles, calculateEarned, handleUpda
                 <div className="flex-1 space-y-4">
                     <div className="flex flex-wrap items-center gap-3">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${statusStyles[job.status]}`}>
-                            {job.status.replace("_", " ")}
+                            {getStatusLabel(job.status)}
                         </span>
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
                             {job.title}
@@ -218,7 +225,7 @@ const ProjectCard = ({ job, isOngoing, statusStyles, calculateEarned, handleUpda
                         </button>
 
                         {/* Status Controls */}
-                        {isOngoing && job.status !== "pending_review" && (
+                        {isOngoing && ["assigned", "in_progress"].includes(job.status) && (
                             <div className="flex items-center bg-gray-50 border border-gray-100 p-1 rounded-xl shadow-inner overflow-hidden">
                                 <button
                                     disabled={job.status !== "assigned" || updatingStatus === job._id}
@@ -248,10 +255,19 @@ const ProjectCard = ({ job, isOngoing, statusStyles, calculateEarned, handleUpda
                                 </button>
                             </div>
                         )}
+
+                        {job.status === "contract_pending" && (
+                            <Link
+                                to={`/jobs/${job._id}`}
+                                className="px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all"
+                            >
+                                Review Contract
+                            </Link>
+                        )}
                         
                         {!isOngoing && job.status !== "completed" && (
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic px-4">
-                                Contract {job.status}
+                                Contract {getStatusLabel(job.status)}
                             </span>
                         )}
                         

@@ -2,6 +2,11 @@ import { create } from "zustand";
 import { io } from "socket.io-client";
 import api from "../utils/api";
 
+const resolveSocketUrl = () => {
+    const apiUrl = import.meta.env.VITE_API_ENDPOINT || "http://localhost:8000/api/v1";
+    return import.meta.env.VITE_SOCKET_URL || apiUrl.replace(/\/api\/v1\/?$/, "");
+};
+
 export const useAuth = create((set, get) => ({
     userData: null,
     isLogginIn: false,
@@ -41,9 +46,11 @@ export const useAuth = create((set, get) => ({
     connectSocket: () => {
         const { userData, socket } = get();
         if (!socket && userData?._id) {
-            const newSocket = io("ws://localhost:8000", {
-                transports: ["websocket"],
+            const socketUrl = resolveSocketUrl();
+            const newSocket = io(socketUrl, {
+                transports: ["websocket", "polling"],
                 reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
                 query: { userId: userData._id },
             });
             set({ socket: newSocket });

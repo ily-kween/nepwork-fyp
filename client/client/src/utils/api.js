@@ -49,7 +49,21 @@ api.interceptors.response.use(
         return response;
     },
     async function (error) {
-        // refreshing access token
+        // Handle network errors
+        if (!error.response) {
+            // Network error or server unreachable
+            console.error("Network error:", error.message);
+            toast.error("Network error: Service is currently unavailable. Please check your connection.");
+            return Promise.reject(error);
+        }
+
+        // Handle 503 Service Unavailable
+        if (error.response?.status === 503) {
+            toast.error(error.response.data?.message || "Service temporarily unavailable. Please try again later.");
+            return Promise.reject(error);
+        }
+
+        // refreshing access token for 401 errors
         if (
             error.response &&
             error?.response.data.message === "Access Token Expired"

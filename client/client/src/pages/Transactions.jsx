@@ -5,20 +5,28 @@ import { Loader } from "../components";
 import TransactionListItem from "../components/TransactionListItem";
 import { useAuth } from "../stores";
 import { FiDownload, FiFilter, FiTrendingUp, FiTrendingDown, FiClock, FiCheckCircle } from "react-icons/fi";
+import {
+    applyTransactionFilters,
+    clearTransactionFilters,
+    loadTransactionFilters,
+    saveTransactionFilters,
+    toTransactionApiParams,
+} from "../utils/transactionFilters";
 
 function Transactions() {
     const { userData } = useAuth();
     const [allTxns, setAllTxns] = useState([]);
     const [fetching, setFetching] = useState(true);
-    const [selectedTab, setSelectedTab] = useState("all"); // all, pending, completed
-    const [filterType, setFilterType] = useState("all"); // all, sent, received
+    const [filters, setFilters] = useState(() => loadTransactionFilters());
 
     const isFreelancer = userData?.role === "freelancer";
     const isClient = userData?.role === "client";
 
     const fetchSetTxns = async () => {
         try {
-            const response = await api.get("/user/transactions/all");
+            const response = await api.get("/user/transactions/all", {
+                params: toTransactionApiParams(filters),
+            });
             setAllTxns(response.data.data || []);
             setFetching(false);
         } catch (error) {
@@ -30,33 +38,21 @@ function Transactions() {
 
     useEffect(() => {
         fetchSetTxns();
-    }, []);
+    }, [filters]);
+
+    const updateFilter = (name, value) => {
+        const updated = saveTransactionFilters({ ...filters, [name]: value });
+        setFilters(updated);
+    };
+
+    const resetFilters = () => {
+        const reset = clearTransactionFilters();
+        setFilters(reset);
+    };
 
     // Filter transactions based on role and filters
     const getFilteredTransactions = () => {
-        let filtered = allTxns;
-
-        // Filter by type (sent/received)
-        if (filterType === "sent") {
-            filtered = filtered.filter(t => 
-                (t.initiator?._id || t.initiator) === userData?._id
-            );
-        } else if (filterType === "received") {
-            filtered = filtered.filter(t => 
-                (t.receiver?._id || t.receiver) === userData?._id
-            );
-        }
-
-        // Filter by status
-        if (selectedTab === "pending") {
-            filtered = filtered.filter(t => 
-                t.status === "pending" || t.status === "processing"
-            );
-        } else if (selectedTab === "completed") {
-            filtered = filtered.filter(t => 
-                t.status === "completed" || t.status === "success"
-            );
-        }
+        const filtered = applyTransactionFilters(allTxns, filters);
 
         return filtered.sort((a, b) => 
             new Date(b.createdAt) - new Date(a.createdAt)
@@ -68,15 +64,15 @@ function Transactions() {
     // Calculate statistics
     const getStats = () => {
         const earned = allTxns
-            .filter(t => (t.receiver?._id || t.receiver) === userData?._id && (t.status === "completed" || t.status === "success"))
+            .filter(t => (t.receiver?._id || t.receiver) === userData?._id && (t.paymentStatus === "completed" || t.status === "done"))
             .reduce((sum, t) => sum + (t.amount || 0), 0);
 
         const paid = allTxns
-            .filter(t => (t.initiator?._id || t.initiator) === userData?._id && (t.status === "completed" || t.status === "success"))
+            .filter(t => (t.initiator?._id || t.initiator) === userData?._id && (t.paymentStatus === "completed" || t.status === "done"))
             .reduce((sum, t) => sum + (t.amount || 0), 0);
 
         const pending = allTxns.filter(t => 
-            t.status === "pending" || t.status === "processing"
+            (t.paymentStatus || t.status) === "pending" || (t.paymentStatus || t.status) === "processing"
         ).reduce((sum, t) => sum + (t.amount || 0), 0);
 
         const totalVolume = allTxns.reduce((sum, t) => sum + (t.amount || 0), 0);
@@ -165,46 +161,11 @@ function Transactions() {
                     {/* Tab Navigation */}
                     <div className="border-b border-gray-200 bg-gray-50">
                         <div className="px-8 py-4 flex items-center justify-between">
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => setSelectedTab("all")}
-                                    className={`pb-4 px-2 font-semibold text-sm border-b-2 transition-colors ${
-                                        selectedTab === "all"
-                                            ? "border-primary text-primary"
-                                            : "border-transparent text-gray-600 hover:text-gray-900"
-                                    }`}
-                                >
-                                    All Transactions
-                                    <span className="ml-2 inline-block bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs font-semibold">
-                                        {allTxns.length}
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() => setSelectedTab("pending")}
-                                    className={`pb-4 px-2 font-semibold text-sm border-b-2 transition-colors ${
-                                        selectedTab === "pending"
-                                            ? "border-yellow-500 text-yellow-600"
-                                            : "border-transparent text-gray-600 hover:text-gray-900"
-                                    }`}
-                                >
-                                    Pending
-                                    <span className="ml-2 inline-block bg-yellow-100 text-yellow-700 rounded-full px-2 py-0.5 text-xs font-semibold">
-                                        {allTxns.filter(t => t.status === "pending" || t.status === "processing").length}
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={() => setSelectedTab("completed")}
-                                    className={`pb-4 px-2 font-semibold text-sm border-b-2 transition-colors ${
-                                        selectedTab === "completed"
-                                            ? "border-green-500 text-green-600"
-                                            : "border-transparent text-gray-600 hover:text-gray-900"
-                                    }`}
-                                >
-                                    Completed
-                                    <span className="ml-2 inline-block bg-green-100 text-green-700 rounded-full px-2 py-0.5 text-xs font-semibold">
-                                        {allTxns.filter(t => t.status === "completed" || t.status === "success").length}
-                                    </span>
-                                </button>
+                            <div className="flex gap-2 items-center">
+                                <span className="inline-block text-sm font-semibold text-gray-700">Filtered Transactions</span>
+                                <span className="inline-block bg-gray-200 text-gray-700 rounded-full px-2 py-0.5 text-xs font-semibold">
+                                    {displayedTxns.length}
+                                </span>
                             </div>
                             <button className="p-2 hover:bg-gray-100 rounded-lg transition text-gray-600">
                                 <FiDownload size={20} />
@@ -213,39 +174,29 @@ function Transactions() {
                     </div>
 
                     {/* Filter Section */}
-                    <div className="px-8 py-4 bg-white border-b border-gray-100 flex items-center gap-3">
-                        <FiFilter className="text-gray-400" size={18} />
-                        <span className="text-sm font-medium text-gray-600">Filter:</span>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setFilterType("all")}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                    filterType === "all"
-                                        ? "bg-primary text-white"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
+                    <div className="px-8 py-4 bg-white border-b border-gray-100">
+                        <div className="flex items-center gap-3 mb-4">
+                            <FiFilter className="text-gray-400" size={18} />
+                            <span className="text-sm font-medium text-gray-600">Filter</span>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 max-w-md">
+                            <select
+                                value={filters.purpose}
+                                onChange={(e) => updateFilter("purpose", e.target.value)}
+                                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm"
                             >
-                                All
-                            </button>
+                                <option value="all">All Payment Types</option>
+                                <option value="initial">Initial Deposit</option>
+                                <option value="final">Final Payment</option>
+                                <option value="milestone">Milestone Payment</option>
+                            </select>
+
                             <button
-                                onClick={() => setFilterType("sent")}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                    filterType === "sent"
-                                        ? "bg-primary text-white"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
+                                type="button"
+                                onClick={resetFilters}
+                                className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold whitespace-nowrap"
                             >
-                                {isFreelancer ? "Received" : "Paid"}
-                            </button>
-                            <button
-                                onClick={() => setFilterType("received")}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                    filterType === "received"
-                                        ? "bg-primary text-white"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
-                            >
-                                {isFreelancer ? "Earned" : "Pending"}
+                                Reset
                             </button>
                         </div>
                     </div>
@@ -271,9 +222,7 @@ function Transactions() {
                                 </div>
                                 <h3 className="text-xl font-bold text-gray-900">No transactions found</h3>
                                 <p className="text-gray-500 mt-2 max-w-xs mx-auto">
-                                    {selectedTab === "pending" 
-                                        ? "You don't have any pending transactions right now."
-                                        : "Your financial activities will appear here."}
+                                    Your financial activities will appear here.
                                 </p>
                             </div>
                         )}

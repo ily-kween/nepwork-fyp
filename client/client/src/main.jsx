@@ -22,6 +22,7 @@ import {
     SingleTransaction,
     Transactions,
     PayProject,
+    PayMilestone,
     VerifyPayment,
     ProjectWorkspace,
 } from "./pages/index.js";
@@ -112,6 +113,24 @@ createRoot(document.getElementById("root")).render(
                     
                     <Route
                         path="jobs/:jobId/pay/verify"
+                        element={
+                            <Protected>
+                                <VerifyPayment />
+                            </Protected>
+                        }
+                    />
+
+                    <Route
+                        path="milestones/:milestoneId/pay"
+                        element={
+                            <Protected>
+                                <PayMilestone />
+                            </Protected>
+                        }
+                    />
+
+                    <Route
+                        path="milestones/:milestoneId/pay/verify"
                         element={
                             <Protected>
                                 <VerifyPayment />

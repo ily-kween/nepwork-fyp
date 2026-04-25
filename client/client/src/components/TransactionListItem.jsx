@@ -24,6 +24,7 @@ function TransactionListItem({ transactionData }) {
 
     const status = transactionData.paymentStatus || transactionData.status;
     const isDone = status === "done" || status === "completed";
+    const purpose = transactionData.purpose || "final";
 
     return (
         <Link
@@ -51,6 +52,9 @@ function TransactionListItem({ transactionData }) {
                         </h3>
                         <span className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${isReceiver ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
                             {isReceiver ? 'Income' : 'Expense'}
+                        </span>
+                        <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                            {purpose}
                         </span>
                     </div>
                     <p className="text-gray-600 text-sm font-medium truncate max-w-[200px] sm:max-w-[300px]" title={transactionData.jobId?.title || transactionData.jobTitle || "Project Payment"}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router";
 import { GoHome } from "react-icons/go";
 import { MdOutlineSpaceDashboard } from "react-icons/md";
@@ -8,32 +8,35 @@ import { HiOutlineChatAlt2 } from "react-icons/hi";
 import { FiBriefcase, FiLogOut, FiMenu, FiX, FiChevronDown, FiDollarSign } from "react-icons/fi";
 import { useAuth, useSetting } from "../stores";
 import api from "../utils/api";
-import toast from "react-hot-toast";
+import {
+    applyTransactionFilters,
+    loadTransactionFilters,
+    toTransactionApiParams,
+} from "../utils/transactionFilters";
 
 function Sidebar() {
     const navigate = useNavigate();
-    const { isLoggedIn, userData, clearUserData, logout, disconnectSocket } = useAuth();
+    const { isLoggedIn, userData } = useAuth();
     const openSetting = useSetting((state) => state.open);
     const [isOpen, setIsOpen] = useState(false);
     const [rotation, setRotation] = useState(0);
     const [transactions, setTransactions] = useState([]);
-    const [transactionsLoading, setTransactionsLoading] = useState(false);
     const [expandTransactions, setExpandTransactions] = useState(false);
 
     // Fetch transactions
     const fetchTransactions = async () => {
         try {
-            setTransactionsLoading(true);
-            const response = await api.get("/user/transactions/all");
+            const storedFilters = loadTransactionFilters();
+            const response = await api.get("/user/transactions/all", {
+                params: toTransactionApiParams(storedFilters),
+            });
             let txns = response.data.data || [];
             // Ensure txns is always an array
             txns = Array.isArray(txns) ? txns : [];
-            setTransactions(txns);
+            setTransactions(applyTransactionFilters(txns, storedFilters));
         } catch (error) {
             console.error("Failed to fetch transactions:", error);
             setTransactions([]); // Ensure we default to empty array on error
-        } finally {
-            setTransactionsLoading(false);
         }
     };
 

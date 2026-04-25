@@ -34,6 +34,7 @@ function Jobs() {
 
     const statusStyles = {
         open: "bg-primary text-whitetext",
+        contract_pending: "bg-amber-500 text-white",
         closed: "bg-red-500 text-whitetext",
         finished: "bg-gray-500 text-whitetext",
         in_progress: "bg-gray-500 text-whitetext",
@@ -44,10 +45,17 @@ function Jobs() {
     const MapJobStatus = {
         open: "Apply",
         closed: "Closed",
+        contract_pending: "Contract Pending",
         in_progress: "In Progress",
         finished: "Finished",
         paid: "Paid & Completed",
         completed: "Completed"
+    };
+
+    const getJobStatusLabel = (status) => {
+        if (status === "contract_pending") return "Contract Pending";
+        if (status === "pending_review") return "Pending Review";
+        return status.charAt(0).toUpperCase() + status.slice(1).replaceAll("_", " ");
     };
     const fetchSetCurrentJob = async () => {
         try {
@@ -161,15 +169,7 @@ function Jobs() {
                                             <span
                                                 className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[currentJob.status] || "bg-gray-100"}`}
                                             >
-                                                {currentJob.status ===
-                                                    "in_progress"
-                                                    ? "In Progress"
-                                                    : currentJob.status
-                                                        .charAt(0)
-                                                        .toUpperCase() +
-                                                    currentJob.status.slice(
-                                                        1,
-                                                    )}
+                                                {getJobStatusLabel(currentJob.status)}
                                             </span>
                                             
                                             {/* Status Badges */}

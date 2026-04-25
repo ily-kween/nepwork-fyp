@@ -1,6 +1,6 @@
 import React from "react";
 import { useAuth } from "../stores";
-import { ClientHomepage, FreelancerHomePage, Loader } from "../components";
+import { ClientHomepage, FreelancerHomePage, Footer, Loader } from "../components";
 
 function Home() {
     const { userData, isLoggedIn } = useAuth();
@@ -9,7 +9,16 @@ function Home() {
         return <Loader />;
     }
 
-    if (!isLoggedIn || userData?.role === "client") {
+    if (!isLoggedIn) {
+        return (
+            <>
+                <ClientHomepage isLoggedIn={isLoggedIn} userData={userData} />
+                <Footer />
+            </>
+        );
+    }
+
+    if (userData?.role === "client") {
         return <ClientHomepage isLoggedIn={isLoggedIn} userData={userData} />;
     }
 

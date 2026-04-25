@@ -18,6 +18,7 @@ import ProjectWorkspace from "./ProjectWorkspace";
 import SingleTransaction from "./SingleTransaction";
 import Transactions from "./Transactions";
 import PayProject from "./PayProject";
+import PayMilestone from "./PayMilestone";
 import VerifyPayment from "./VerifyPayment";
 
 export {
@@ -41,5 +42,6 @@ export {
     SingleTransaction,
     Transactions,
     PayProject,
+    PayMilestone,
     VerifyPayment,
 };

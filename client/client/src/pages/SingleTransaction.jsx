@@ -112,6 +112,21 @@ function SingleTransaction() {
                                         </p>
                                     </div>
                                 </Link>
+                                {txnData.milestoneId && (
+                                    <div className="flex items-start space-x-4">
+                                        <span className="text-primary mt-1">
+                                            <FiClipboard />
+                                        </span>
+                                        <div>
+                                            <p className="text-sm text-gray-500">
+                                                Milestone
+                                            </p>
+                                            <p className="font-medium text-gray-900 break-all">
+                                                {txnData.milestoneId.title}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

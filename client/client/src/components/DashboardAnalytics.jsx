@@ -23,6 +23,11 @@ import {
 import api from "../utils/api";
 import Loader from "./Loader";
 import { useAuth } from "../stores";
+import {
+    applyTransactionFilters,
+    loadTransactionFilters,
+    toTransactionApiParams,
+} from "../utils/transactionFilters";
 
 ChartJS.register(
     CategoryScale,
@@ -56,12 +61,18 @@ const DashboardAnalytics = ({ role }) => {
         const fetchAllData = async () => {
             setFetching(true);
             try {
+                const storedFilters = loadTransactionFilters();
                 const [txnRes, jobsRes] = await Promise.all([
-                    api.get("/user/transactions/all"),
+                    api.get("/user/transactions/all", {
+                        params: toTransactionApiParams(storedFilters),
+                    }),
                     api.get(role === 'freelancer' ? "/jobs/freelancer-jobs" : "/jobs/get-jobs-posted-by-current-user")
                 ]);
 
-                const txns = Array.isArray(txnRes.data?.data) ? txnRes.data.data : [];
+                const txns = applyTransactionFilters(
+                    Array.isArray(txnRes.data?.data) ? txnRes.data.data : [],
+                    storedFilters,
+                );
                 const jobs = Array.isArray(jobsRes.data?.data) ? jobsRes.data.data : [];
                 const userId = userData?._id;
 
@@ -193,7 +204,7 @@ const DashboardAnalytics = ({ role }) => {
                     labels: sortedCategories.map(([name]) => name.substring(0, 15) + (name.length > 15 ? '...' : '')),
                     datasets: [{
                         label: role === 'freelancer' ? 'Earnings (Rs)' : 'Spending (Rs)',
-                        data: sortedCategories.map(([_, amount]) => amount),
+                        data: sortedCategories.map(([, amount]) => amount),
                         backgroundColor: [
                             'rgba(16, 185, 129, 0.8)',
                             'rgba(59, 130, 246, 0.8)',

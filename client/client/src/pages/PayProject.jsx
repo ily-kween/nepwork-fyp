@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useSearchParams } from "react-router";
 import api from "../utils/api";
 import { Button, Loader } from "../components";
 import toast from "react-hot-toast";
@@ -7,14 +7,18 @@ import toast from "react-hot-toast";
 function PayProject() {
     const { jobId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [txnData, setTxnData] = useState(null);
     const [esewaData, setEsewaData] = useState(null);
+    const paymentStage = searchParams.get("stage") === "initial" ? "initial" : "final";
 
     useEffect(() => {
         const fetchTransaction = async () => {
             try {
-                const response = await api.get(`/jobs/transaction/${jobId}`);
+                const response = await api.get(`/jobs/transaction/${jobId}`, {
+                    params: paymentStage === "initial" ? { stage: "initial" } : {},
+                });
                 setTxnData(response.data.data.transaction);
                 setEsewaData(response.data.data.esewa);
             } catch (error) {
@@ -26,7 +30,7 @@ function PayProject() {
         };
 
         fetchTransaction();
-    }, [jobId, navigate]);
+    }, [jobId, navigate, paymentStage]);
 
     const fields = esewaData ? {
         amount: esewaData.amount,
@@ -44,6 +48,8 @@ function PayProject() {
 
     if (loading) return <Loader />;
 
+    const isInitialPayment = paymentStage === "initial" || txnData?.purpose === "initial";
+
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
@@ -52,13 +58,23 @@ function PayProject() {
                     alt="eSewa Logo" 
                     className="h-16 mx-auto mb-6"
                 />
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Checkout</h2>
-                <p className="text-gray-600 mb-6">Complete your payment securely with eSewa.</p>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    {isInitialPayment ? "Contract Deposit" : "Checkout"}
+                </h2>
+                <p className="text-gray-600 mb-6">
+                    {isInitialPayment
+                        ? "Complete the 10% contract deposit securely with eSewa before work starts."
+                        : "Complete your payment securely with eSewa."}
+                </p>
                 
                 <div className="bg-gray-50 rounded p-4 mb-6 border text-left flex flex-col gap-2">
                     <div className="flex justify-between border-b pb-2">
                         <span className="text-gray-600">Total Amount</span>
                         <span className="font-bold text-lg">Rs. {txnData?.amount}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 text-sm text-gray-500">
+                        <span>Payment Type</span>
+                        <span className="font-semibold text-gray-700 capitalize">{txnData?.purpose || paymentStage}</span>
                     </div>
                 </div>
 
@@ -89,7 +105,9 @@ function PayProject() {
                             variant="filled" 
                             className="w-full font-bold bg-[#60bb46] hover:bg-[#4d9f36] border-[#60bb46]"
                         >
-                            Pay Rs. {txnData?.amount} with eSewa
+                            {isInitialPayment
+                                ? `Pay Contract Deposit of Rs. ${txnData?.amount} with eSewa`
+                                : `Pay Rs. ${txnData?.amount} with eSewa`}
                         </Button>
                     </form>
                 )}

@@ -15,6 +15,11 @@ import { useNavigate } from "react-router";
 import api from "../../utils/api";
 import Loader from "../Loader";
 import { useAuth } from "../../stores";
+import {
+    applyTransactionFilters,
+    loadTransactionFilters,
+    toTransactionApiParams,
+} from "../../utils/transactionFilters";
 
 ChartJS.register(
     CategoryScale,
@@ -40,8 +45,11 @@ function TotalEarnings() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get("/user/transactions/all");
-                const allTransactions = response.data.data;
+                const storedFilters = loadTransactionFilters();
+                const response = await api.get("/user/transactions/all", {
+                    params: toTransactionApiParams(storedFilters),
+                });
+                const allTransactions = applyTransactionFilters(response.data.data, storedFilters);
                 const userId = userData?._id || JSON.parse(localStorage.getItem("user"))?._id;
 
                 // Filter transactions where user is the receiver (earner)
