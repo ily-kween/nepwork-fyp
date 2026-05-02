@@ -49,53 +49,161 @@ export const getMilestoneTransaction = asyncHandler(async (req, res) => {
         );
     }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const supportsMongoTransactions = () => {
+        const topologyType = mongoose.connection?.client?.topology?.description?.type;
+        return topologyType === "ReplicaSetWithPrimary" || topologyType === "Sharded";
+    };
+
+    // Try to use a session/transaction if the Mongo deployment supports it.
+    // If transactions are not supported (standalone mongod), fall back to
+    // a non-transactional create so the endpoint doesn't 500.
+    let session = null;
+    if (supportsMongoTransactions()) {
+        try {
+            session = await mongoose.startSession();
+            session.startTransaction();
+        } catch (err) {
+            session = null;
+        }
+    }
 
     try {
-        const transaction = await Transaction.create([
-            {
-                status: "pending",
-                jobId: project._id,
-                jobTitle: project.title,
-                userId: project.postedBy,
-                freelancerId: project.acceptedFreelancer,
-                milestoneId: milestone._id,
-                paidBy: project.postedBy,
-                paidTo: project.acceptedFreelancer,
-                paymentMethod: "eSewa",
-                purpose: "milestone",
-                initiator: project.postedBy,
-                receiver: project.acceptedFreelancer,
-                amount: Math.round(milestone.amount || 0),
-            },
-        ], { session });
+        if (session) {
+            try {
+                const transaction = await Transaction.create([
+                    {
+                        status: "pending",
+                        jobId: project._id,
+                        jobTitle: project.title,
+                        userId: project.postedBy,
+                        freelancerId: project.acceptedFreelancer,
+                        milestoneId: milestone._id,
+                        paidBy: project.postedBy,
+                        paidTo: project.acceptedFreelancer,
+                        paymentMethod: "eSewa",
+                        purpose: "milestone",
+                        initiator: project.postedBy,
+                        receiver: project.acceptedFreelancer,
+                        amount: Math.round(milestone.amount || 0),
+                    },
+                ], { session });
 
-        milestone.paymentTransaction = transaction[0]._id;
+                milestone.paymentTransaction = transaction[0]._id;
+                milestone.paymentStatus = "pending_payment";
+                await milestone.save({ session });
+                await session.commitTransaction();
+                session.endSession();
+
+                const cryptoStr = Math.random().toString(36).substring(2, 8);
+                const t_uuid = `${transaction[0]._id.toString()}-${cryptoStr}`;
+                const signature = generateEsewaSignature(transaction[0].amount, t_uuid, process.env.ESEWA_PRODUCT_CODE || "EPAYTEST");
+
+                return res.status(201).json(
+                    new ApiResponse(201, true, true, "Milestone payment transaction created", {
+                        transaction: transaction[0],
+                        milestone,
+                        esewa: {
+                            signature,
+                            transaction_uuid: t_uuid,
+                            amount: Math.round(transaction[0].amount),
+                            product_code: process.env.ESEWA_PRODUCT_CODE || "EPAYTEST",
+                        },
+                    }),
+                );
+            } catch (err) {
+                // If transactions aren't supported by the server, fall back to non-transactional create
+                const isTxnError = err?.code === 20 || (err?.message || "").includes("Transaction numbers are only allowed");
+                if (isTxnError) {
+                    try {
+                        await session.abortTransaction();
+                        session.endSession();
+                    } catch (e) {}
+
+                    const transaction = await Transaction.create({
+                        status: "pending",
+                        jobId: project._id,
+                        jobTitle: project.title,
+                        userId: project.postedBy,
+                        freelancerId: project.acceptedFreelancer,
+                        milestoneId: milestone._id,
+                        paidBy: project.postedBy,
+                        paidTo: project.acceptedFreelancer,
+                        paymentMethod: "eSewa",
+                        purpose: "milestone",
+                        initiator: project.postedBy,
+                        receiver: project.acceptedFreelancer,
+                        amount: Math.round(milestone.amount || 0),
+                    });
+
+                    milestone.paymentTransaction = transaction._id;
+                    milestone.paymentStatus = "pending_payment";
+                    await milestone.save();
+
+                    const cryptoStr = Math.random().toString(36).substring(2, 8);
+                    const t_uuid = `${transaction._id.toString()}-${cryptoStr}`;
+                    const signature = generateEsewaSignature(transaction.amount, t_uuid, process.env.ESEWA_PRODUCT_CODE || "EPAYTEST");
+
+                    return res.status(201).json(
+                        new ApiResponse(201, true, true, "Milestone payment transaction created", {
+                            transaction,
+                            milestone,
+                            esewa: {
+                                signature,
+                                transaction_uuid: t_uuid,
+                                amount: Math.round(transaction.amount),
+                                product_code: process.env.ESEWA_PRODUCT_CODE || "EPAYTEST",
+                            },
+                        }),
+                    );
+                }
+
+                // rethrow other errors
+                throw err;
+            }
+        }
+
+        // Fallback: create transaction without session/transaction support
+        const transaction = await Transaction.create({
+            status: "pending",
+            jobId: project._id,
+            jobTitle: project.title,
+            userId: project.postedBy,
+            freelancerId: project.acceptedFreelancer,
+            milestoneId: milestone._id,
+            paidBy: project.postedBy,
+            paidTo: project.acceptedFreelancer,
+            paymentMethod: "eSewa",
+            purpose: "milestone",
+            initiator: project.postedBy,
+            receiver: project.acceptedFreelancer,
+            amount: Math.round(milestone.amount || 0),
+        });
+
+        milestone.paymentTransaction = transaction._id;
         milestone.paymentStatus = "pending_payment";
-        await milestone.save({ session });
-        await session.commitTransaction();
-        session.endSession();
+        await milestone.save();
 
         const cryptoStr = Math.random().toString(36).substring(2, 8);
-        const t_uuid = `${transaction[0]._id.toString()}-${cryptoStr}`;
-        const signature = generateEsewaSignature(transaction[0].amount, t_uuid, process.env.ESEWA_PRODUCT_CODE || "EPAYTEST");
+        const t_uuid = `${transaction._id.toString()}-${cryptoStr}`;
+        const signature = generateEsewaSignature(transaction.amount, t_uuid, process.env.ESEWA_PRODUCT_CODE || "EPAYTEST");
 
         return res.status(201).json(
             new ApiResponse(201, true, true, "Milestone payment transaction created", {
-                transaction: transaction[0],
+                transaction,
                 milestone,
                 esewa: {
                     signature,
                     transaction_uuid: t_uuid,
-                    amount: Math.round(transaction[0].amount),
+                    amount: Math.round(transaction.amount),
                     product_code: process.env.ESEWA_PRODUCT_CODE || "EPAYTEST",
                 },
             }),
         );
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
         console.error(error);
         throw new ApiError(500, true, "Failed to create milestone transaction");
     }

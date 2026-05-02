@@ -1,9 +1,10 @@
 import { ApiResponse, asyncHandler } from "../../utils/index.js";
-import { Job } from "../../models/job.model.js";
+import { Job, User } from "../../models/index.js";
 import mongoose from "mongoose";
+import { rankJobsForFreelancer } from "../../utils/recommendation.js";
 
 export const getHomePageJobs = asyncHandler(async (req, res) => {
-    const userId = req.body.userId ?? "";
+    const userId = req.query.userId ?? req.body.userId ?? "";
 
     // if userId not provided send all jobs
     if (!userId) {
@@ -37,10 +38,20 @@ export const getHomePageJobs = asyncHandler(async (req, res) => {
 
     // TODO: send jobs that would be more relevent if userId is provided
     async function getRecommendedJobs(userId) {
-        const jobs = await Job.find({ status: "open" }).populate({
+        const freelancer = await User.findById(userId).select("tags hourlyRate rating available kycVerified role");
+
+        const jobs = await Job.find({ status: "open", postedBy: { $ne: userId } }).populate({
             path: "postedBy",
-            select: "name avatar _id",
+            select: "name avatar _id rating",
         }).sort({ createdAt: -1 });
-        return jobs;
+        if (!freelancer || freelancer.role !== "freelancer") {
+            return jobs;
+        }
+
+        return rankJobsForFreelancer(jobs, freelancer).map((job) => ({
+            ...job,
+            recommendationScore: job.recommendation?.recommendationScore || 0,
+            recommendation: job.recommendation,
+        }));
     }
 });

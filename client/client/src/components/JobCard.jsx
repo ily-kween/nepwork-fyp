@@ -7,13 +7,19 @@ import { Link } from "react-router";
 function JobCard({ jobData }) {
     const {
         title = "Project Title",
-        status,
-        postedBy,
+        status = "open",
+        postedBy = {},
         tags = [],
-        hourlyRate,
-        _id,
-        createdAt = new Date() // Fallback
+        hourlyRate = 0,
+        _id = "",
+        createdAt = new Date(), // Fallback
+        recommendation,
     } = jobData;
+
+    const postedByName = `${postedBy?.name?.firstName || "Client"} ${postedBy?.name?.lastName || ""}`.trim();
+    const postedById = postedBy?._id || "";
+    const postedByAvatar = postedBy?.avatar || default_avatar;
+    const postedByRating = Number(postedBy?.rating || 0);
 
     const statusStyles = {
         open: "bg-emerald-50 text-emerald-600 border-emerald-100 badge-icon-open",
@@ -34,7 +40,16 @@ function JobCard({ jobData }) {
     };
 
     return (
-        <div className="group w-80 bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden flex flex-col">
+        <div className="group w-80 bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 overflow-hidden flex flex-col relative">
+            <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1">
+                <div className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest border border-emerald-200">
+                    {Math.round(recommendation?.recommendationScore || 0)}% Match
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest border border-amber-200">
+                    <FiStar className="fill-current" />
+                    <span>{postedByRating > 0 ? postedByRating.toFixed(1) : "N/A"}</span>
+                </div>
+            </div>
             {/* Subtle Top Accent */}
             <div className="h-1 bg-gradient-to-r from-primary/80 to-primary/40"></div>
 
@@ -44,14 +59,15 @@ function JobCard({ jobData }) {
                     <div className="flex items-center gap-3 flex-1">
                         <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200">
                             <img
-                                src={postedBy.avatar || default_avatar}
-                                alt={`${postedBy.name.firstName}`}
+                                src={postedByAvatar}
+                                alt={postedByName}
                                 className="w-full h-full object-cover"
                             />
                         </div>
                         <div className="flex flex-col min-w-0">
-                            <Link to={`/profile/${postedBy._id}`} className="text-xs font-semibold text-slate-700 hover:text-primary transition-colors truncate">
-                                {postedBy.name.firstName} {postedBy.name.lastName}
+                            <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Posted by</span>
+                            <Link to={postedById ? `/profile/${postedById}` : "#"} className="text-xs font-semibold text-slate-700 hover:text-primary transition-colors truncate">
+                                {postedByName}
                             </Link>
                             <div className="flex items-center gap-1 text-[9px] text-slate-500 mt-0.5">
                                 <FiCalendar className="text-[8px]" />
@@ -110,18 +126,18 @@ function JobCard({ jobData }) {
 JobCard.propTypes = {
     jobData: PropTypes.shape({
         title: PropTypes.string,
-        status: PropTypes.oneOf(["open", "closed", "finished", "in_progress", "completed", "paid"]).isRequired,
+        status: PropTypes.oneOf(["open", "closed", "finished", "in_progress", "completed", "paid"]),
         postedBy: PropTypes.shape({
             avatar: PropTypes.string,
             name: PropTypes.shape({
-                firstName: PropTypes.string.isRequired,
-                lastName: PropTypes.string.isRequired,
-            }).isRequired,
-        }).isRequired,
+                firstName: PropTypes.string,
+                lastName: PropTypes.string,
+            }),
+        }),
         tags: PropTypes.arrayOf(PropTypes.string),
-        hourlyRate: PropTypes.number.isRequired,
-        _id: PropTypes.string.isRequired,
-    }).isRequired,
+        hourlyRate: PropTypes.number,
+        _id: PropTypes.string,
+    }),
 };
 
 export default JobCard;

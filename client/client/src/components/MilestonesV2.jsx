@@ -28,7 +28,7 @@ function Milestones({ projectId, projectData, onMilestoneUpdate }) {
 
     const isClient = projectData?.postedBy?._id === userData?._id;
     const isFreelancer = projectData?.acceptedFreelancer?._id === userData?._id;
-    const canManageMilestones = isFreelancer && ["assigned", "in_progress", "pending_review", "completed", "paid"].includes(projectData?.status);
+    const canManageMilestones = isClient && ["assigned", "in_progress", "pending_review", "completed", "paid"].includes(projectData?.status);
     const canReviewMilestones = isClient;
 
     const statusStyles = {
@@ -103,7 +103,7 @@ function Milestones({ projectId, projectData, onMilestoneUpdate }) {
     const handleCreateMilestone = async (e) => {
         e.preventDefault();
         if (!canManageMilestones) {
-            toast.error("Only the assigned freelancer can create milestones");
+            toast.error("Only the project client can create milestones");
             return;
         }
 
@@ -140,7 +140,7 @@ function Milestones({ projectId, projectData, onMilestoneUpdate }) {
         if (!editingMilestone) return;
 
         if (!canManageMilestones) {
-            toast.error("Only the assigned freelancer can update milestones");
+            toast.error("Only the project client can update milestones");
             return;
         }
 
@@ -271,7 +271,7 @@ function Milestones({ projectId, projectData, onMilestoneUpdate }) {
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6 border-b border-slate-200 pb-4">
                     <div>
                         <h2 className="text-2xl font-bold text-slate-900">Milestones</h2>
-                        <p className="text-sm text-slate-500 mt-1">Milestones are created by the freelancer, reviewed by the client, and paid individually.</p>
+                        <p className="text-sm text-slate-500 mt-1">Milestones are defined and approved by the client, completed by the freelancer, and released phase by phase.</p>
                     </div>
                     {canManageMilestones && !showCreateForm && !showEditForm && !["completed", "paid"].includes(projectData?.status) && (
                         <button
@@ -303,7 +303,7 @@ function Milestones({ projectId, projectData, onMilestoneUpdate }) {
                 {totalCount > 0 && (
                     <div className="mb-6">
                         <div className="flex items-center justify-between text-sm mb-2">
-                            <span className="font-medium text-slate-700">Approved: {approvedCount}/{totalCount}</span>
+                            <span className="font-medium text-slate-700">Approved milestones: {approvedCount}/{totalCount}</span>
                             <span className="text-slate-500">{Math.round(progressPercentage)}%</span>
                         </div>
                         <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">

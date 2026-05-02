@@ -5,11 +5,11 @@ import default_avatar from "../assets/default_avatar.svg";
 import { Link } from "react-router";
 import capitalize from "../utils/capitalize";
 
-function FreelancerCard({ userData }) {
+function FreelancerCard({ userData, recommendationScore = 0, recommendationReasons = [], matchedProjectTitle = "", onInvite, inviteLabel = "Invite" }) {
     const {
         avatar,
         rating = 4.9, // Fallback for aesthetic
-        name,
+        name = {},
         kycVerified,
         available,
         tags = [],
@@ -17,8 +17,21 @@ function FreelancerCard({ userData }) {
         _id,
     } = userData;
 
+    const firstName = capitalize(name.firstName || "Freelancer");
+    const lastName = capitalize(name.lastName || "");
+    const displayRating = Number(rating || 0);
+
     return (
-        <div className="group w-72 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500 overflow-hidden flex flex-col">
+        <div className="group w-72 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500 overflow-hidden flex flex-col relative">
+            <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-1">
+                <div className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
+                    {Math.round(recommendationScore)}% Match
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest border border-amber-200">
+                    <FiStar className="fill-current" />
+                    <span>{displayRating > 0 ? displayRating.toFixed(1) : "N/A"}</span>
+                </div>
+            </div>
             {/* Top Branding Strip */}
             <div className="h-2 bg-gradient-to-r from-primary to-indigo-600 w-0 group-hover:w-full transition-all duration-700"></div>
             
@@ -29,7 +42,7 @@ function FreelancerCard({ userData }) {
                         <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-gray-50 shadow-sm group-hover:shadow-md transition-shadow">
                             <img
                                 src={avatar || default_avatar}
-                                alt={`${name.firstName}`}
+                                alt={firstName}
                                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                             />
                         </div>
@@ -40,11 +53,7 @@ function FreelancerCard({ userData }) {
                         )}
                     </div>
                     
-                    <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-1 text-amber-500 bg-amber-50 px-2 py-1 rounded-lg text-xs font-bold">
-                            <FiStar className="fill-current" />
-                            <span>{rating}</span>
-                        </div>
+                    <div className="flex flex-col items-end pt-10">
                         <span className={`text-[10px] font-black uppercase tracking-widest mt-2 ${available ? 'text-emerald-500' : 'text-red-400'}`}>
                             {available ? 'Available Now' : 'Busy'}
                         </span>
@@ -54,12 +63,26 @@ function FreelancerCard({ userData }) {
                 {/* Info Section */}
                 <div className="space-y-1">
                     <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-primary transition-colors">
-                        {capitalize(name.firstName)} {capitalize(name.lastName)}
+                        {firstName} {lastName}
                     </h3>
                     <div className="flex items-center gap-2 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
                         <FiClock className="text-xs" />
                         <span>Active 2h ago</span>
                     </div>
+                    {matchedProjectTitle && (
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                            Matched project: <span className="text-slate-900">{matchedProjectTitle}</span>
+                        </div>
+                    )}
+                    {recommendationReasons.length > 0 && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                            {recommendationReasons.slice(0, 2).map((reason) => (
+                                <span key={reason} className="text-[10px] font-bold text-primary bg-primary/5 border border-primary/10 px-2 py-1 rounded-md">
+                                    {reason}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Skills Section */}
@@ -75,7 +98,7 @@ function FreelancerCard({ userData }) {
                 </div>
 
                 {/* Bottom Stats & Action */}
-                <div className="pt-4 border-t border-gray-50 mt-auto flex items-center justify-between">
+                <div className="pt-4 border-t border-gray-50 mt-auto flex items-center justify-between gap-3">
                     <div className="flex flex-col">
                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Rate</span>
                         <div className="flex items-baseline gap-1">
@@ -83,12 +106,21 @@ function FreelancerCard({ userData }) {
                             <span className="text-[10px] font-bold text-gray-400">/hr</span>
                         </div>
                     </div>
-                    
-                    <Link to={`/profile/${_id}`}>
-                        <button className="p-3 bg-gray-50 text-gray-400 rounded-xl group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                            <FiArrowRight className="text-xl" />
-                        </button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        {onInvite && (
+                            <button
+                                onClick={onInvite}
+                                className="px-3 py-2 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all"
+                            >
+                                {inviteLabel}
+                            </button>
+                        )}
+                        <Link to={`/profile/${_id}`}>
+                            <button className="p-3 bg-gray-50 text-gray-400 rounded-xl group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                <FiArrowRight className="text-xl" />
+                            </button>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

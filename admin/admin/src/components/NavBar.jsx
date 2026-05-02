@@ -17,12 +17,12 @@ function NavBar() {
             <div className="max-w-7xl mx-auto px-6 md:px-12 h-20 flex items-center justify-between">
                 {/* Logo & Brand */}
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-slate-900 to-slate-700 rounded-xl flex items-center justify-center text-white font-black text-lg">
+                    <div className="w-10 h-10 bg-gradient-to-br from-primary to-emerald-600 rounded-xl flex items-center justify-center text-white font-black text-lg">
                         A
                     </div>
                     <div className="hidden md:block">
                         <h1 className="text-lg font-black text-slate-900">Admin Panel</h1>
-                        <p className="text-[10px] text-slate-500 font-semibold">Management Hub</p>
+                        <p className="text-[10px] text-slate-600 font-semibold">Management Hub</p>
                     </div>
                 </div>
 

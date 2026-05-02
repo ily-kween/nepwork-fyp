@@ -4,20 +4,16 @@ import { useForm } from "react-hook-form";
 import { useAuth, useUser } from "../stores";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
-import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
-import { Button } from "../components";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
+
 function Login() {
     const navigate = useNavigate();
     const login = useAuth((state) => state.login);
-
-    const setUserData = useUser((state) => state.setUserData); // Response message after clicking submiting, Like Invalid credentials
+    const setUserData = useUser((state) => state.setUserData);
 
     const [resMsg, setResMsg] = useState(null);
-
     const [showPassword, setShowPassword] = useState(false);
-    const handleShowPassword = () => {
-        setShowPassword((prev) => !prev);
-    };
+    const [isLoading, setIsLoading] = useState(false);
 
     const {
         register,
@@ -27,6 +23,7 @@ function Login() {
     } = useForm();
 
     const onSubmit = (data) => {
+        setIsLoading(true); 
         const payload = {
             email: data.email,
             password: data.password,
@@ -35,116 +32,160 @@ function Login() {
         axios
             .post(`${import.meta.env.VITE_API_ENDPOINT}/admin/login`, payload)
             .then((res) => {
-                /*
-                 * If login success
-                 * Handling tokens, keeping them at local storage
-                 * */
                 const accessToken = res.data.data.tokens.accessToken;
                 const refreshToken = res.data.data.tokens.refreshToken;
 
-                localStorage.setItem(
-                    "accessToken",
-                    JSON.stringify(accessToken),
-                );
+                localStorage.setItem("accessToken", JSON.stringify(accessToken));
+                localStorage.setItem("refreshToken", JSON.stringify(refreshToken));
 
-                localStorage.setItem(
-                    "refreshToken",
-                    JSON.stringify(refreshToken),
-                );
-
-                login(); // reset form values after logged in
+                login();
                 reset();
-                navigate("/"); //set user data after successfull login
-                setUserData(); //send notification after login
-
-                toast.success(
-                    res.data.message,
-                ); /*if login success and there was resMsg ,
-
-        * setting it to null
-        * */
+                setUserData();
+                toast.success(res.data.message || "Login successful!");
                 if (resMsg) setResMsg(null);
+                navigate("/");
             })
             .catch((err) => {
-                console.log(err.message);
-                setResMsg(err.response.data.message);
+                let errorMessage = "Login failed. Please try again.";
+                if (err.response?.data?.message) {
+                    errorMessage = err.response.data.message;
+                } else if (!err.response) {
+                    errorMessage = "Service is currently unavailable. Please check your connection.";
+                }
+                setResMsg(errorMessage);
+                toast.error(errorMessage);
+            })
+            .finally(() => {
+                setIsLoading(false);
             });
     };
 
     return (
-        <div className="bg-secondary min-h-[800px]  flex items-center justify-center">
-            <div className="bg-tertiray w-[430px] shadow-md rounded-xl h-[500px] flex justify-center items-center flex-col">
-                <h2 className="text-2xl font-bold text-center text-greentext mb-4">
-                    Admin Login
-                </h2>
-                <form onSubmit={handleSubmit(onSubmit)} className="">
+        <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-gray-50 via-white to-primary/5">
+            <div className="w-full max-w-lg">
+                {/* Header Section */}
+                <div className="mb-12 space-y-4 text-center">
+                    <div className="inline-flex items-center justify-center w-20 h-20 shadow-lg bg-gradient-to-br from-primary to-emerald-600 rounded-2xl">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
                     <div>
-                        <label
-                            htmlFor="email"
-                            className="block text-sm font-medium text-gray-700"
+                        <h1 className="text-4xl font-bold lg:text-5xl text-slate-900">
+                            Admin <span className="text-primary">Portal</span>
+                        </h1>
+                        <p className="mt-2 font-medium text-slate-600">Secure access to platform controls</p>
+                    </div>
+                </div>
+
+                {/* Login Card */}
+                <div className="p-8 space-y-8 bg-white border border-gray-200 shadow-lg rounded-2xl lg:p-10">
+                    
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                        {/* Email Field */}
+                        <div className="space-y-3">
+                            <label htmlFor="email" className="block text-sm font-bold tracking-widest uppercase text-slate-900">
+                                Email Address
+                            </label>
+                            <div className="relative">
+                                <FiMail className="absolute text-lg text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
+                                <input
+                                    type="email"
+                                    id="email"
+                                    {...register("email", {
+                                        required: "Email address is required",
+                                        pattern: {
+                                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                            message: "Invalid email address",
+                                        },
+                                    })}
+                                    placeholder="admin@example.com"
+                                    className="w-full py-3 pl-12 pr-4 font-medium placeholder-gray-400 transition-all border border-gray-300 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-slate-900"
+                                />
+                            </div>
+                            {errors.email && (
+                                <p className="flex items-center gap-2 text-sm font-medium text-red-600">
+                                    ⚠️ {errors.email.message}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Password Field */}
+                        <div className="space-y-3">
+                            <label htmlFor="password" className="block text-sm font-bold tracking-widest uppercase text-slate-900">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <FiLock className="absolute text-lg text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    id="password"
+                                    {...register("password", {
+                                        required: "Password is required",
+                                        minLength: {
+                                            value: 6,
+                                            message: "Password must be at least 6 characters",
+                                        },
+                                    })}
+                                    placeholder="Enter your password"
+                                    className="w-full py-3 pl-12 pr-12 font-medium placeholder-gray-400 transition-all border border-gray-300 bg-gray-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-slate-900"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute text-gray-400 transition-colors transform -translate-y-1/2 right-4 top-1/2 hover:text-gray-600"
+                                >
+                                    {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+                                </button>
+                            </div>
+                            {errors.password && (
+                                <p className="flex items-center gap-2 text-sm font-medium text-red-600">
+                                    ⚠️ {errors.password.message}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Error Message */}
+                        {resMsg && (
+                            <div className="p-4 space-y-2 border border-red-200 bg-red-50 rounded-xl">
+                                <p className="text-sm font-bold text-red-700">❌ Error</p>
+                                <p className="text-sm text-red-600">{resMsg}</p>
+                            </div>
+                        )}
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="flex items-center justify-center w-full gap-2 px-6 py-3 font-bold text-white transition-all duration-300 shadow-md bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg active:scale-95"
                         >
-                            Email
-                        </label>
-                        <input
-                            type="text"
-                            id="email"
-                            {...register("email", {
-                                required: "Email address is required",
-                            })}
-                            className="mt-1 peer p-2 w-full bg-transparent outline-none px-4 text-base rounded-md bg-white border border-hover_button focus:shadow-md"
-                        />
-                        {errors.email && (
-                            <p className="text-sm text-red-500 mt-1">
-                                {errors.email.message}
-                            </p>
-                        )}
-                    </div>
+                            {isLoading ? (
+                                <>
+                                    <div className="w-5 h-5 border-2 rounded-full border-white/30 border-t-white animate-spin"></div>
+                                    Signing in...
+                                </>
+                            ) : (
+                                <>
+                                    Sign In
+                                    <FiArrowRight className="text-lg" />
+                                </>
+                            )}
+                        </button>
+                    </form>
 
-                    <label
-                        htmlFor="password"
-                        className="block mt-4 text-sm font-medium text-gray-700"
-                    >
-                        Password
-                    </label>
-                    <div className="mt-1 flex items-center flex-row w-full rounded-md bg-white border border-hover_button focus:shadow-md">
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            id="password"
-                            {...register("password", {
-                                required: "Password is required",
-                            })}
-                            className="focus:shadow-md rounded-md p-2 w-[90%] bg-transparent outline-none px-4 text-base "
-                        />
-                        {showPassword ? (
-                            <FaRegEye
-                                className="cursor-pointer"
-                                onClick={handleShowPassword}
-                            />
-                        ) : (
-                            <FaRegEyeSlash
-                                className="cursor-pointer"
-                                onClick={handleShowPassword}
-                            />
-                        )}
-                    </div>
-                    {errors.password && (
-                        <p className="text-sm text-red-500 mt-1">
-                            {errors.password.message}
-                        </p>
-                    )}
+                    {/* Divider */}
+                    <div className="border-t border-gray-200"></div>
 
-                    {resMsg && (
-                        <p className="text-sm text-red-500 mt-1">{resMsg}</p>
-                    )}
+                    {/* Security Note */}
+                    <p className="text-xs font-medium tracking-widest text-center text-gray-500 uppercase">
+                        🔒 Secure encrypted connection • Administrator access only
+                    </p>
+                </div>
 
-                    <Button
-                        type="submit"
-                        style="filled"
-                        className="mx-auto mt-4 w-full"
-                    >
-                        Login
-                    </Button>
-                </form>
+                {/* Footer */}
+                <p className="mt-8 font-medium text-center text-gray-600">
+                    Need help? <span className="font-semibold cursor-pointer text-primary hover:underline">Contact support</span>
+                </p>
             </div>
         </div>
     );

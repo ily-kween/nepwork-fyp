@@ -2,9 +2,20 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { logoutHelper } from "./logoutHelper";
 
+const readStoredValue = (key) => {
+    const storedValue = localStorage.getItem(key);
+    if (!storedValue) return null;
+
+    try {
+        return JSON.parse(storedValue);
+    } catch {
+        return storedValue;
+    }
+};
+
 const refreshAcessToken = async () => {
     try {
-        const refreshToken = JSON.parse(localStorage.getItem("refreshToken"));
+        const refreshToken = readStoredValue("refreshToken");
         const response = await axios.post(
             `${import.meta.env.VITE_API_ENDPOINT}/user/refresh-access-token`,
             { refreshToken: refreshToken },
@@ -34,7 +45,7 @@ const api = axios.create({
 // Sending Access token with every request in Authorization header
 api.interceptors.request.use(
     function (config) {
-        const accessToken = JSON.parse(localStorage.getItem("accessToken"));
+        const accessToken = readStoredValue("accessToken");
         config.headers.Authorization = `Bearer ${accessToken}`;
         return config;
     },

@@ -50,7 +50,11 @@ function FreelancerHomePage({ userData }) {
         const fetchSetJobs = async () => {
             setLoading(true);
             try {
-                const response = await api.get(`/jobs/get-home-jobs${query ? `?q=${query}` : ''}`);
+                const params = new URLSearchParams();
+                if (userData?._id) params.set("userId", userData._id);
+                if (query) params.set("q", query);
+
+                const response = await api.get(`/jobs/get-home-jobs${params.toString() ? `?${params.toString()}` : ""}`);
                 
                 let results = response.data.data;
                 
@@ -79,9 +83,9 @@ function FreelancerHomePage({ userData }) {
                     {/* Header Section */}
                     <div className="space-y-2 mb-6">
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
-                            🚀 Discover Your Next Project
+                            🚀 Recommended Projects
                         </h1>
-                        <p className="text-slate-600 text-sm">Find amazing opportunities that match your expertise</p>
+                        <p className="text-slate-600 text-sm">Projects ranked by how closely they match your profile, tags, and rate.</p>
                     </div>
 
                     {/* Stats Cards */}
@@ -174,7 +178,7 @@ function FreelancerHomePage({ userData }) {
                             ) : jobs.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {jobs.map((item) => (
-                                        <JobCard key={item._id} jobData={item} />
+                                        <JobCard key={item._id || `${item.title}-${item.createdAt || "job"}`} jobData={item} />
                                     ))}
                                 </div>
                             ) : (

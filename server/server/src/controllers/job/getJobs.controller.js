@@ -20,7 +20,7 @@ export const getAllJobs = asyncHandler(async (_, res) => {
 export const getJobsPostedByCurrentUser = asyncHandler(async (req, res) => {
     const jobs = await Job.find({ postedBy: req.user._id })
         .select("-startTime -endTime -workedTimeInSec")
-        .populate("acceptedFreelancer", "name avatar")
+        .populate("acceptedFreelancer", "name avatar rating")
         .sort({ createdAt: -1 });
 
     return res

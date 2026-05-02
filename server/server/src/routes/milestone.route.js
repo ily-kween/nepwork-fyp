@@ -35,7 +35,7 @@ milestoneRouter.post(
     "/",
     authenticate,
     verified,
-    freelancerOnly,
+    clientOnly,
     createMilestone
 );
 
@@ -71,7 +71,7 @@ milestoneRouter.patch(
     "/:milestoneId",
     authenticate,
     verified,
-    freelancerOnly,
+    clientOnly,
     updateMilestone
 );
 
@@ -80,7 +80,7 @@ milestoneRouter.delete(
     "/:milestoneId",
     authenticate,
     verified,
-    freelancerOnly,
+    clientOnly,
     deleteMilestone
 );
 

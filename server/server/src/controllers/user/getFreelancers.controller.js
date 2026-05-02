@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
-import { User } from "../../models/user.model.js";
+import { User, Job } from "../../models/index.js";
 import { ApiResponse, asyncHandler } from "../../utils/index.js";
+import { rankFreelancersForJobs } from "../../utils/recommendation.js";
 
 export const getFreelancers = asyncHandler(async (req, res) => {
-    const userId = (req.body.userId ?? "").trim();
+    const userId = (req.query.userId ?? req.body.userId ?? "").trim();
 
     if (userId && mongoose.isValidObjectId(userId)) {
         const freelancers = await fetchRelevantFreelancers(userId);
@@ -37,9 +38,18 @@ export const getFreelancers = asyncHandler(async (req, res) => {
         );
 });
 async function fetchRelevantFreelancers(userId) {
-    // TODO: send only relevant freelancers
-    const users = await User.find({ role: "freelancer" }).select(
-        "name avatar _id rating available hourlyRate kycVerified",
+    const clientJobs = await Job.find({ postedBy: userId, status: { $in: ["open", "contract_pending"] } })
+        .select("title tags hourlyRate createdAt status")
+        .sort({ createdAt: -1 })
+        .limit(10);
+
+    const freelancers = await User.find({ role: "freelancer" }).select(
+        "name avatar _id rating available hourlyRate kycVerified tags about",
     );
-    return users;
+
+    return rankFreelancersForJobs(freelancers, clientJobs).map((freelancer) => ({
+        ...freelancer,
+        recommendationScore: freelancer.recommendation?.recommendationScore || 0,
+        recommendation: freelancer.recommendation,
+    }));
 }

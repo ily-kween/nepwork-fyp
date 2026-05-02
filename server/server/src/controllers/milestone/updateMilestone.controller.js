@@ -18,9 +18,9 @@ export const updateMilestone = asyncHandler(async (req, res) => {
 
     const project = milestone.projectId;
 
-    // Only assigned freelancer can update milestones
-    if (project.acceptedFreelancer?.toString() !== userId) {
-        throw new ApiError(401, false, "Only assigned freelancer can update milestones");
+    // Only the project client can update milestones
+    if (project.postedBy?.toString() !== userId) {
+        throw new ApiError(401, false, "Only project client can update milestones");
     }
 
     // Cannot update completed or approved milestones

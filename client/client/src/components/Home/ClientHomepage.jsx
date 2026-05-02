@@ -30,6 +30,10 @@ import { Link, useSearchParams } from "react-router";
 
 function ClientHomepage({ isLoggedIn, userData }) {
     const [freelancers, setFreelancers] = useState([]);
+    const [clientJobs, setClientJobs] = useState([]);
+    const [inviteTarget, setInviteTarget] = useState(null);
+    const [selectedProjectId, setSelectedProjectId] = useState("");
+    const [inviting, setInviting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
     const query = searchParams.get("q") || "";
@@ -38,15 +42,27 @@ function ClientHomepage({ isLoggedIn, userData }) {
         const fetchSetFreelancers = async () => {
             setLoading(true);
             try {
-                const response = await api.get("/user/get-freelancers");
+                const requestParams = userData?.role === "client" && userData?._id ? { params: { userId: userData._id } } : undefined;
+                const response = await api.get("/user/get-freelancers", requestParams);
                 let results = response.data.data;
+
+                if (userData?.role === "client" && userData?._id) {
+                    try {
+                        const jobsResponse = await api.get("/jobs/get-jobs-posted-by-current-user");
+                        setClientJobs(Array.isArray(jobsResponse.data?.data) ? jobsResponse.data.data.filter((job) => ["open", "contract_pending"].includes(job.status)) : []);
+                    } catch (jobError) {
+                        setClientJobs([]);
+                    }
+                } else {
+                    setClientJobs([]);
+                }
                 
                 if (query) {
                     results = results.filter(f => 
                         f.name?.firstName?.toLowerCase().includes(query.toLowerCase()) || 
                         f.name?.lastName?.toLowerCase().includes(query.toLowerCase()) ||
-                        f.skills?.some(s => s.toLowerCase().includes(query.toLowerCase())) ||
-                        f.bio?.toLowerCase().includes(query.toLowerCase())
+                        f.tags?.some?.((skill) => skill.toLowerCase().includes(query.toLowerCase())) ||
+                        f.about?.toLowerCase?.().includes(query.toLowerCase())
                     );
                 } else {
                     results = results.slice(0, 8);
@@ -60,7 +76,28 @@ function ClientHomepage({ isLoggedIn, userData }) {
             }
         };
         fetchSetFreelancers();
-    }, [query]);
+    }, [query, userData]);
+
+    const handleInviteFreelancer = async () => {
+        if (!inviteTarget || !selectedProjectId) {
+            toast.error("Select a project to send the invitation");
+            return;
+        }
+
+        setInviting(true);
+        try {
+            await api.post(`/jobs/${selectedProjectId}/invite-freelancer`, {
+                freelancerId: inviteTarget._id,
+            });
+            toast.success(`Invitation sent to ${inviteTarget?.name?.firstName || "freelancer"}`);
+            setInviteTarget(null);
+            setSelectedProjectId("");
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to send invitation");
+        } finally {
+            setInviting(false);
+        }
+    };
 
     if (!isLoggedIn) {
         return (
@@ -515,8 +552,8 @@ function ClientHomepage({ isLoggedIn, userData }) {
                                     </div>
                                 ) : (
                                     <div className="space-y-0.5">
-                                        <h3 className="font-semibold text-slate-900">Available Talent</h3>
-                                        <p className="text-xs text-slate-500">Verified & top-rated freelancers</p>
+                                        <h3 className="font-semibold text-slate-900">Recommended Talent</h3>
+                                        <p className="text-xs text-slate-500">Ranked by your active project requirements</p>
                                     </div>
                                 )}
                             </div>
@@ -534,7 +571,22 @@ function ClientHomepage({ isLoggedIn, userData }) {
                             ) : freelancers.length > 0 ? (
                                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                                     {freelancers.map((item) => (
-                                        <FreelancerCard key={item._id} userData={item} />
+                                        <FreelancerCard
+                                            key={item._id || item.recommendation?.matchedJobId || `${item.name?.firstName || "freelancer"}-${item.name?.lastName || "user"}`}
+                                            userData={item}
+                                            recommendationScore={item.recommendation?.recommendationScore || item.recommendationScore || 0}
+                                            matchedProjectTitle={item.recommendation?.matchedJobTitle || ""}
+                                            recommendationReasons={item.recommendation?.matchReasons || []}
+                                            onInvite={
+                                                userData?.role === "client"
+                                                    ? () => {
+                                                        setInviteTarget(item);
+                                                        setSelectedProjectId(clientJobs[0]?._id || "");
+                                                    }
+                                                    : undefined
+                                            }
+                                            inviteLabel="Invite"
+                                        />
                                     ))}
                                 </div>
                             ) : (
@@ -551,6 +603,55 @@ function ClientHomepage({ isLoggedIn, userData }) {
                     </div>
                 </div>
             </main>
+
+            {inviteTarget && userData?.role === "client" && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/40 p-4">
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+                        <h3 className="text-xl font-bold text-slate-900">Invite Freelancer</h3>
+                        <p className="mt-1 text-sm text-slate-500">
+                            Select a project to invite {inviteTarget?.name?.firstName || "this freelancer"}.
+                        </p>
+
+                        <div className="mt-4 space-y-3">
+                            <label className="block text-xs font-bold uppercase tracking-widest text-slate-500">Project</label>
+                            <select
+                                value={selectedProjectId}
+                                onChange={(e) => setSelectedProjectId(e.target.value)}
+                                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-primary"
+                            >
+                                {clientJobs.length === 0 ? (
+                                    <option value="">No open projects available</option>
+                                ) : (
+                                    clientJobs.map((job) => (
+                                        <option key={job._id} value={job._id}>
+                                            {job.title}
+                                        </option>
+                                    ))
+                                )}
+                            </select>
+                        </div>
+
+                        <div className="mt-6 flex gap-3">
+                            <button
+                                onClick={handleInviteFreelancer}
+                                disabled={inviting || clientJobs.length === 0}
+                                className="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {inviting ? "Sending..." : "Send Invite"}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setInviteTarget(null);
+                                    setSelectedProjectId("");
+                                }}
+                                className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-bold text-slate-700"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

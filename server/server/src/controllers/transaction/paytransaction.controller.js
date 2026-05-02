@@ -45,38 +45,71 @@ export const payTransaction = asyncHandler(async (req, res) => {
     // Verify transaction details with eSewa
     try {
         const productCode = process.env.ESEWA_PRODUCT_CODE || "EPAYTEST";
-        const totalAmountStr = typeof reqAmount === "string" ? reqAmount : amount;
-        const verifyUrl = `${process.env.ESEWA_VERIFY_URL || "https://rc-epay.esewa.com.np/api/epay/transaction/status/"}?product_code=${productCode}&total_amount=${totalAmountStr}&transaction_uuid=${transactionUUID}`;
+        const verifyUrl = `${process.env.ESEWA_VERIFY_URL || "https://rc-epay.esewa.com.np/api/epay/transaction/status/"}?product_code=${productCode}&total_amount=${amount}&transaction_uuid=${transactionUUID}`;
         
-        const response = await fetch(verifyUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            timeout: 10000 // 10 second timeout
+        console.log('eSewa Verify Request:', {
+            url: verifyUrl,
+            amount,
+            transactionUUID,
+            productCode
         });
         
-        if (!response.ok) {
-            console.error(`eSewa verification failed: ${response.status} ${response.statusText}`);
-            throw new ApiError(503, true, "Payment gateway is temporarily unavailable. Please try again later.");
-        }
+        // Use AbortController for timeout handling in Node.js fetch
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
         
-        const data = await response.json();
-        
-        if (!data || data.status !== "COMPLETE") {
-            throw new ApiError(400, true, "Payment verification failed. Please verify with eSewa and contact support if needed.");
+        try {
+            const response = await fetch(verifyUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                console.error(`eSewa verification failed: ${response.status} ${response.statusText}`);
+                throw new ApiError(503, true, "Payment gateway is temporarily unavailable. Please try again later.");
+            }
+            
+            const data = await response.json();
+            console.log('eSewa Verify Response:', data);
+            
+            if (!data || data.status !== "COMPLETE") {
+                console.error('Payment status not COMPLETE:', data?.status);
+                throw new ApiError(400, true, "Payment verification failed. Please verify with eSewa and contact support if needed.");
+            }
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            console.error('Fetch error details:', fetchError);
+            throw fetchError;
         }
     } catch (error) {
         if (error instanceof ApiError) throw error;
-        if (error.name === 'AbortError' || error.message.includes('timeout')) {
+        if (error.name === 'AbortError') {
             throw new ApiError(503, true, "Payment gateway request timed out. Please try again.");
         }
         console.error('eSewa verification error:', error);
         throw new ApiError(503, true, "Payment gateway service is temporarily unavailable. Your payment may still be processing. Please check your eSewa transaction status.");
     }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const supportsMongoTransactions = () => {
+        const topologyType = mongoose.connection?.client?.topology?.description?.type;
+        return topologyType === "ReplicaSetWithPrimary" || topologyType === "Sharded";
+    };
+
+    let session = null;
+    const useSession = supportsMongoTransactions();
+    if (useSession) {
+        try {
+            session = await mongoose.startSession();
+            session.startTransaction();
+        } catch (err) {
+            session = null;
+        }
+    }
 
     try {
         const job = await Job.findById(transaction.jobId);
@@ -102,7 +135,11 @@ export const payTransaction = asyncHandler(async (req, res) => {
             milestone.paymentStatus = "released";
             milestone.paymentReleasedAt = Date.now();
             milestone.paymentTransaction = transaction._id;
-            await milestone.save();
+            if (session) {
+                await milestone.save({ session });
+            } else {
+                await milestone.save();
+            }
 
             const projectMilestones = await Milestone.find({ projectId: job._id });
             const allReleased = projectMilestones.length > 0 && projectMilestones.every((item) => item.status === "approved" && item.paymentStatus === "released");
@@ -123,7 +160,11 @@ export const payTransaction = asyncHandler(async (req, res) => {
         transaction.transactionUUID = transactionUUID;
         transaction.transactionCode = transactionCode;
         transaction.transactionId = transactionCode;
-        await Promise.all([job.save(), receiver.save(), transaction.save()]);
+        if (session) {
+            await Promise.all([job.save({ session }), receiver.save({ session }), transaction.save({ session })]);
+        } else {
+            await Promise.all([job.save(), receiver.save(), transaction.save()]);
+        }
         await sendNotification({
             receiverId: receiver._id,
             senderId: userId,
@@ -135,13 +176,28 @@ export const payTransaction = asyncHandler(async (req, res) => {
             type: "payment_received",
             link: `/transactions/${transaction._id}`
         });
-        await session.commitTransaction();
-        session.endSession();
+        if (session) {
+            await session.commitTransaction();
+            session.endSession();
+        }
     } catch (error) {
-        await session.abortTransaction();
-        session.endSession();
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
         console.error(error);
-        throw new ApiError(500, true, "Something went wrong");
+        throw new ApiError(500, true, error?.message || "Something went wrong");
+    }
+
+    const responsePayload = { transaction };
+    if (transaction.purpose === "milestone") {
+        // attempt to include the updated milestone in the response
+        try {
+            const updatedMilestone = await Milestone.findById(transaction.milestoneId);
+            responsePayload.milestone = updatedMilestone;
+        } catch (e) {
+            // ignore
+        }
     }
 
     return res
@@ -152,7 +208,7 @@ export const payTransaction = asyncHandler(async (req, res) => {
                 true,
                 true,
                 "Job transaction paid",
-                transaction,
+                responsePayload,
             ),
         );
 });

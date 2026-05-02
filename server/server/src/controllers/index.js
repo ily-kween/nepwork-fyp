@@ -25,6 +25,7 @@ import { updateJobStatusByFreelancer } from "./job/updateJobStatusByFreelancer.c
 import { reviewJobByClient } from "./job/reviewJob.controller.js";
 import { getHomePageJobs } from "./job/getHomePageJobs.controller.js";
 import { getFreelancerJobs } from "./job/getFreelancerJobs.controller.js";
+import { inviteFreelancer } from "./job/inviteFreelancer.controller.js";
 import { getFreelancers } from "./user/getFreelancers.controller.js";
 import {
     getProfileData,
@@ -109,6 +110,7 @@ export {
     getSingleJob,
     getHomePageJobs,
     getFreelancers,
+    inviteFreelancer,
     getProfileData,
     updateAvatar,
     updateProfileTags,

@@ -25,9 +25,9 @@ export const createMilestone = asyncHandler(async (req, res) => {
         throw new ApiError(404, false, "Project not found");
     }
 
-    // Only the assigned freelancer can create milestones
-    if (project.acceptedFreelancer?.toString() !== userId) {
-        throw new ApiError(401, false, "Only assigned freelancer can create milestones");
+    // Only the project client can create milestones
+    if (project.postedBy?.toString() !== userId) {
+        throw new ApiError(401, false, "Only project client can create milestones");
     }
 
     if (!["assigned", "in_progress", "pending_review", "completed", "paid"].includes(project.status)) {

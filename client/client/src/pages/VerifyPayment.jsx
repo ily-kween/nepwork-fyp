@@ -9,11 +9,31 @@ function VerifyPayment() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [verifying, setVerifying] = useState(true);
-    const fallbackJobId = searchParams.get("jobId") || jobId;
+    const fallbackJobIdRaw = searchParams.get("jobId") || jobId;
+    // If `jobId` was passed with an embedded query string (some gateways append
+    // `?data=...` to the jobId value) extract the pure id for navigation and
+    // leave the raw for possible data extraction.
+    const fallbackJobId = typeof fallbackJobIdRaw === "string" && fallbackJobIdRaw.includes("?data=")
+        ? fallbackJobIdRaw.split("?data=")[0]
+        : fallbackJobIdRaw;
 
     useEffect(() => {
         const verify = async () => {
-            const dataQuery = searchParams.get("data");
+            let dataQuery = searchParams.get("data");
+            // Some gateways (or redirects) may embed the `data` param inside the
+            // `jobId` value (e.g. jobId=123?data=...), so if `data` is missing try
+            // to extract it from the raw fallbackJobId value.
+            if (!dataQuery && typeof fallbackJobIdRaw === "string" && fallbackJobIdRaw.includes("?data=")) {
+                dataQuery = fallbackJobIdRaw.split("?data=")[1] || null;
+            }
+            console.log("VerifyPayment - Raw query params:", {
+                data: dataQuery,
+                jobId,
+                milestoneId,
+                fallbackJobIdRaw,
+                fallbackJobId
+            });
+
             if (!dataQuery) {
                 toast.error("Invalid verification request.");
                 return navigate(fallbackJobId ? `/jobs/${fallbackJobId}` : "/dashboard");
@@ -21,14 +41,25 @@ function VerifyPayment() {
 
             try {
                 const decodedData = JSON.parse(atob(dataQuery));
+                console.log("VerifyPayment - Decoded data:", decodedData);
+                
                 // Extract transaction ID from UUID (format: {transactionId}-{randomCode})
                 const originalTxnId = decodedData.transaction_uuid?.split('-')[0];
+                
+                console.log("VerifyPayment - Extracted txn ID:", originalTxnId);
                 
                 if (!originalTxnId || !decodedData.transaction_uuid) {
                     toast.error("Invalid transaction data received.");
                     return navigate(fallbackJobId ? `/jobs/${fallbackJobId}` : "/dashboard");
                 }
                 
+                console.log("VerifyPayment - Sending payment request:", {
+                    txnId: originalTxnId,
+                    transactionCode: decodedData.transaction_code,
+                    transactionUUID: decodedData.transaction_uuid,
+                    amount: decodedData.total_amount
+                });
+
                 await api.post(`/jobs/transaction/${originalTxnId}/pay`, {
                     transactionCode: decodedData.transaction_code,
                     transactionUUID: decodedData.transaction_uuid,
@@ -38,6 +69,12 @@ function VerifyPayment() {
                 navigate(`/transactions/${originalTxnId}`);
             } catch (error) {
                 let errorMsg = "Payment verification failed. ";
+                
+                console.error("VerifyPayment - Error details:", {
+                    message: error.message,
+                    status: error.response?.status,
+                    data: error.response?.data
+                });
                 
                 if (error.response?.data?.message) {
                     errorMsg += error.response.data.message;

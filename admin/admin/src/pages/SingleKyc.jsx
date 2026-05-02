@@ -86,13 +86,13 @@ function SingleKyc() {
     const getStatusColor = (status) => {
         switch (status) {
             case 'verified':
-                return 'emerald';
+                return 'primary';
             case 'failed':
                 return 'red';
             case 'pending':
                 return 'amber';
             default:
-                return 'slate';
+                return 'gray';
         }
     };
 
@@ -112,15 +112,14 @@ function SingleKyc() {
     const statusColor = getStatusColor(data.status);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-24">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 pb-24">
             {/* Header */}
-            <header className="bg-slate-900 pt-20 pb-16 px-6 md:px-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -mr-48 -mt-48 pointer-events-none"></div>
+            <header className="bg-white border-b border-gray-200 pt-6 pb-6 px-6 md:px-12">
                 
-                <div className="max-w-7xl mx-auto relative z-10">
+                <div className="max-w-7xl mx-auto">
                     <button
                         onClick={() => navigate("/kycs")}
-                        className="flex items-center gap-2 px-4 py-2 mb-8 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all border border-white/10"
+                        className="flex items-center gap-2 px-4 py-2 mb-8 bg-gray-50 hover:bg-gray-100 text-slate-700 rounded-lg transition-all border border-gray-200"
                     >
                         <FiArrowLeft className="w-4 h-4" />
                         Back to KYC List
@@ -128,13 +127,13 @@ function SingleKyc() {
                     
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-4xl font-black text-white mb-2">KYC Verification Details</h1>
-                            <p className="text-slate-400">Review and manage user identity verification</p>
+                            <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-2">KYC Verification Details</h1>
+                            <p className="text-slate-600">Review and manage user identity verification</p>
                         </div>
-                        <div className={`flex items-center gap-3 px-6 py-3 rounded-2xl border-2 ${
-                            statusColor === 'emerald' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' :
-                            statusColor === 'red' ? 'bg-red-500/10 border-red-500/30 text-red-400' :
-                            'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                        <div className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 ${
+                            statusColor === 'emerald' ? 'bg-primary/10 border-primary/30 text-primary' :
+                            statusColor === 'red' ? 'bg-red-50 border-red-200 text-red-600' :
+                            'bg-amber-50 border-amber-200 text-amber-600'
                         }`}>
                             {getStatusIcon(data.status)}
                             <span className="font-bold capitalize text-sm">{data.status}</span>
@@ -144,9 +143,9 @@ function SingleKyc() {
             </header>
 
             {/* Content */}
-            <main className="max-w-7xl mx-auto px-6 md:px-12 -mt-8 relative z-20 space-y-6">
+            <main className="max-w-7xl mx-auto px-6 md:px-12 py-12 relative z-20 space-y-6">
                 {/* Personal Details */}
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
                     <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
                             👤
@@ -167,7 +166,7 @@ function SingleKyc() {
                 </div>
 
                 {/* Address */}
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
                     <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                             <FiMapPin className="w-5 h-5" />
@@ -215,7 +214,7 @@ function SingleKyc() {
                 </div>
 
                 {/* Contact Information */}
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
                     <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                         <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
                             📞
@@ -241,7 +240,7 @@ function SingleKyc() {
                 </div>
 
                 {/* Document Information */}
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
                     <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-3">
                         <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
                             <FiFileText className="w-5 h-5" />
@@ -280,7 +279,7 @@ function SingleKyc() {
                 </div>
 
                 {/* Status Management */}
-                <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+                <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
                     <h2 className="text-2xl font-bold text-slate-900 mb-6">Decision & Action</h2>
                     
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -371,232 +370,5 @@ const InfoCard = ({ label, value, span = "col-span-1" }) => (
         <p className="text-lg font-bold text-slate-900">{value}</p>
     </div>
 );
-
-export default SingleKyc;
-
-    if (!data) return <Loader />;
-
-    return (
-        <div className="flex flex-col justify-center items-center -inset-1 bg-emerald-200/30">
-            <Button
-                style="filled"
-                onClick={() => navigate("/kycs")}
-                className="m-2 ml-2"
-            >
-                Go Back
-            </Button>
-
-            <div className="border border-hover_button rounded-xl w-[500px] mx-auto bg-white p-6 mb-6">
-                <div className="">
-                    <div id="names" className="mb-4">
-                        <h3 className="text-lg font-semibold text-primary">
-                            Personal Details
-                        </h3>
-                        <div className="flex">
-                            <strong>First name:</strong>
-                            <p className="ml-1">{data.name.firstName}</p>
-                        </div>
-                        <div className="flex">
-                            {data.name.middleName && (
-                                <>
-                                    <strong>Middle name:</strong>
-                                    <p className="ml-1">
-                                        {data.name.middleName}
-                                    </p>
-                                </>
-                            )}
-                        </div>
-                        <div className="flex">
-                            <strong>Last name:</strong>
-                            <p className="ml-1">{data.name.lastName}</p>
-                        </div>
-                        <div id="dob">
-                            <strong>Date of Birth: </strong>
-                            {data.dob.year}-{data.dob.month}-{data.dob.day}
-                        </div>
-                        <div className="flex">
-                            <strong>Gender: </strong>
-                            <p className="ml-1">
-                                {data.gender ?? "Not provided"}
-                            </p>
-                        </div>
-                    </div>
-                    <hr className="border-hover_button" />
-                    <div>
-                        <h3 className="text-lg font-semibold mt-4 text-primary">
-                            Address
-                        </h3>
-                        <strong>Permanent Address</strong>
-                        <div className="flex gap-10">
-                            <span className="flex gap-1">
-                                <label className="font-semibold">
-                                    Country:
-                                </label>
-                                <p>
-                                    {data.address.permanent.country.toUpperCase()}
-                                </p>
-                            </span>
-                            <span className="flex gap-1">
-                                <label className="font-semibold">State:</label>
-                                <p>{data.address.permanent.state}</p>
-                            </span>
-                            <span className="flex gap-1">
-                                <label className="font-semibold">City:</label>
-                                <p>
-                                    {data.address.permanent.city.toUpperCase()}
-                                </p>
-                            </span>
-                        </div>
-                    </div>
-                    <div>
-                        <strong>Temporary Address</strong>
-                        <div className="flex gap-10 mb-4">
-                            <span className="flex  gap-1">
-                                <label className="font-semibold">
-                                    Country:
-                                </label>
-                                <p>
-                                    {data.address.temporary.country.toUpperCase()}
-                                </p>
-                            </span>
-                            <span className="flex  gap-1">
-                                <label className="font-semibold">State:</label>
-                                <p>{data.address.temporary.state}</p>
-                            </span>
-                            <span className="flex  gap-1">
-                                <label className="font-semibold">City:</label>
-                                <p>
-                                    {data.address.temporary.city.toUpperCase()}
-                                </p>
-                            </span>
-                        </div>
-                        <hr className="border-hover_button" />
-                        <div id="contact" className="mb-4">
-                            <h3 className="text-lg font-semibold mt-4 text-primary">
-                                Contact
-                            </h3>
-                            <div className="flex gap-10">
-                                <span className="flex  gap-1">
-                                    <label className="font-semibold">
-                                        Email:
-                                    </label>
-                                    <p>
-                                        {data.contact?.email ?? "Email address"}
-                                    </p>
-                                </span>
-                                <span className="flex  gap-1">
-                                    <span className="font-semibold">
-                                        Phone:
-                                    </span>
-                                    <p>
-                                        {data.contact?.phoneNumber ??
-                                            "Phone number"}
-                                    </p>
-                                </span>
-                            </div>
-                        </div>
-                        <hr className="border-hover_button" />
-                        <div id="document" className="mb-4">
-                            <h3 className="text-lg font-semibold mt-4 text-primary">
-                                Documents
-                            </h3>
-                            <div id="docInfo" className="flex gap-10">
-                                <span className="flex  gap-1">
-                                    <label className="font-semibold">
-                                        Document Type:
-                                    </label>
-                                    <p>{data.document.type}</p>
-                                </span>
-                                <span className="flex  gap-1">
-                                    <label className="font-semibold">
-                                        Document Id:
-                                    </label>
-                                    <p>{data.document.id}</p>
-                                </span>
-                            </div>
-                        </div>
-                        <hr className="border-hover_button" />
-                    </div>
-                    <PhotoProvider>
-                        <PhotoView src={`${data.document.url}`}>
-                            <img
-                                src={`${data.document.url}`}
-                                alt=""
-                                className="max-w-[400px] mx-auto mt-10 cursor-pointer"
-                            />
-                        </PhotoView>
-                    </PhotoProvider>
-                </div>
-                <div className="mt-2">
-                    <div id="status">
-                        <form
-                            className="justify-center p-4 flex items-center flex-col"
-                            onSubmit={handleSubmit(onSubmit)}
-                        >
-                            <div className="justify-between w-full flex items-center">
-                                <div>
-                                    <label className="mr-2" htmlFor="kycStatus">
-                                        KYC Status:
-                                    </label>
-                                    <Controller
-                                        name="selectKyc"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <select
-                                                {...field}
-                                                id="kycStatus"
-                                                disabled={!editStatus}
-                                            >
-                                                <option value="pending">
-                                                    Pending
-                                                </option>
-                                                <option value="verified">
-                                                    Verified
-                                                </option>
-                                                <option value="failed">
-                                                    Failed
-                                                </option>
-                                            </select>
-                                        )}
-                                    />
-                                </div>
-
-                                <Button type="submit">
-                                    {editStatus ? "Save" : "Edit"}
-                                </Button>
-                            </div>
-
-                            {kycStatus === "failed" && (
-                                <div className="w-full">
-                                    <h1>Reason</h1>
-                                    <textarea
-                                        className="w-full border border-hover_button rounded shadow-lg"
-                                        disabled={!editStatus}
-                                        id="reason"
-                                        {...register("reason", {
-                                            validate: (value) => {
-                                                if (!editStatus) return true;
-                                                return (
-                                                    value.trim() !== "" ||
-                                                    "Reason is required"
-                                                );
-                                            },
-                                        })}
-                                        defaultValue={data?.failedReason ?? ""}
-                                    />
-                                    {errors.reason && (
-                                        <p className="text-red-600">
-                                            {errors.reason.message}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 export default SingleKyc;

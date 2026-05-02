@@ -26,6 +26,7 @@ import {
     getJobContract,
     approveJobContract,
     downloadJobContractPdf,
+    inviteFreelancer,
 } from "../controllers/index.js";
 
 export const jobRouter = Router();
@@ -49,6 +50,14 @@ jobRouter.post(
     authenticate,
     clientOnly,
     acceptFreelancer,
+);
+
+jobRouter.post(
+    "/:jobId/invite-freelancer",
+    authenticate,
+    verified,
+    clientOnly,
+    inviteFreelancer,
 );
 
 jobRouter.patch(

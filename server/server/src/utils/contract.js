@@ -37,6 +37,8 @@ const formatCurrency = (amount) => `Rs. ${Number(amount || 0).toLocaleString(und
 
 export const buildContractSnapshot = ({ job, milestones = [] }) => {
     const normalizedMilestones = (milestones || []).map((milestone) => ({
+        status: milestone.status || "pending",
+        paymentStatus: milestone.paymentStatus || "pending_payment",
         title: milestone.title,
         description: milestone.description,
         amount: Number(milestone.amount || 0),
@@ -45,10 +47,19 @@ export const buildContractSnapshot = ({ job, milestones = [] }) => {
     }));
 
     const milestoneBudget = normalizedMilestones.reduce((total, milestone) => total + Number(milestone.amount || 0), 0);
+    const approvedMilestoneBudget = normalizedMilestones.reduce((total, milestone) => {
+        const isApproved = milestone.status === "approved" || milestone.paymentStatus === "released";
+        return total + (isApproved ? Number(milestone.amount || 0) : 0);
+    }, 0);
+    const completedMilestoneBudget = normalizedMilestones.reduce((total, milestone) => {
+        const isCompleted = ["completed", "approved"].includes(milestone.status);
+        return total + (isCompleted ? Number(milestone.amount || 0) : 0);
+    }, 0);
     const baseBudget = Number(job?.payment?.amount || 0);
     const hourlyFallback = Number(job?.hourlyRate || 0);
     const totalCost = Math.max(milestoneBudget, baseBudget, hourlyFallback, 1);
     const initialPaymentAmount = Math.max(1, Math.round(totalCost * 0.1));
+    const remainingCost = Math.max(totalCost - approvedMilestoneBudget, 0);
 
     const milestoneDeadlines = normalizedMilestones
         .map((milestone) => milestone.deadline ? new Date(milestone.deadline) : null)
@@ -74,6 +85,10 @@ export const buildContractSnapshot = ({ job, milestones = [] }) => {
 
     return {
         totalCost,
+        milestoneBudget,
+        approvedMilestoneBudget,
+        completedMilestoneBudget,
+        remainingCost,
         initialPaymentAmount,
         paymentTerms: DEFAULT_PAYMENT_TERMS,
         timelineStart,
@@ -110,6 +125,8 @@ export const buildContractPdfLines = ({ job, client, freelancer, snapshot }) => 
         lines.push({ text: `Scope: ${line}`, font: "regular", size: 10 });
     });
     lines.push({ text: `Total budget: ${formatCurrency(snapshot.totalCost)}`, font: "regular", size: 10 });
+    lines.push({ text: `Approved milestone value: ${formatCurrency(snapshot.approvedMilestoneBudget)}`, font: "regular", size: 10 });
+    lines.push({ text: `Remaining project cost: ${formatCurrency(snapshot.remainingCost)}`, font: "regular", size: 10 });
     lines.push({ text: `Initial payment: ${formatCurrency(snapshot.initialPaymentAmount)} (10%)`, font: "regular", size: 10 });
     lines.push({ text: `Timeline: ${snapshot.timelineStart.toLocaleDateString()} to ${snapshot.timelineEnd.toLocaleDateString()}`, font: "regular", size: 10 });
     lines.push({ text: "", font: "regular", size: 10 });

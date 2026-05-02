@@ -25,6 +25,12 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
     const isClient = !isSelectedFreelancer;
     const needsInitialPayment = contract?.status === "pending_payment" && !contract?.initialPaymentDone;
     const canApproveContract = contract && (!contract.clientApproved || !contract.freelancerApproved);
+    const totalContractCost = contract?.totalCost ?? data?.payment?.amount ?? 0;
+    const approvedMilestoneBudget = contract?.approvedMilestoneBudget ?? 0;
+    const remainingProjectCost = contract?.remainingCost ?? Math.max(Number(totalContractCost || 0) - Number(approvedMilestoneBudget || 0), 0);
+    const hasMilestoneBudget = Number(contract?.milestones?.length || 0) > 0;
+    const isProjectComplete = ["completed", "paid"].includes(data?.jobStatus);
+    const isPaymentSettled = Boolean(data?.payment?.done || data?.jobStatus === "paid");
 
     const downloadContractPdf = async () => {
         try {
@@ -119,24 +125,35 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                                     Total
                                 </span>
                                 <span className="font-semibold text-blue-600">
-                                    NRS{" "}
-                                    {data?.payment?.amount?.toLocaleString()}
+                                    NRS {Number(totalContractCost || 0).toLocaleString()}
                                 </span>
                             </div>
+                            {hasMilestoneBudget && (
+                                <div className="space-y-2 rounded-lg border border-gray-200 bg-white p-4">
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Approved milestone value</span>
+                                        <span className="font-medium text-emerald-700">NRS {Number(approvedMilestoneBudget || 0).toLocaleString()}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Remaining project cost</span>
+                                        <span className="font-semibold text-gray-900">NRS {Number(remainingProjectCost || 0).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex justify-between items-center mt-4">
                                 <span className="text-gray-600">
                                     Payment Status
                                 </span>
                                 <span
-                                    className={`px-3 py-1 rounded-full text-sm ${data?.payment?.done
+                                    className={`px-3 py-1 rounded-full text-sm ${isPaymentSettled
                                             ? "bg-green-100 text-green-800"
                                             : "bg-red-100 text-red-800"
                                         }`}
                                 >
-                                    {data?.payment?.done ? "Paid" : "Pending"}
+                                    {isPaymentSettled ? "Paid" : "Pending"}
                                 </span>
                             </div>
-                            {!data?.payment?.done && !isSelectedFreelancer && (
+                            {!isPaymentSettled && !isSelectedFreelancer && (
                                 <Button
                                     onClick={() =>
                                         navigate(
@@ -148,14 +165,14 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                                     disabled={
                                         needsInitialPayment
                                             ? !contract?.clientApproved || !contract?.freelancerApproved
-                                            : data?.jobStatus !== "completed"
+                                            : !isProjectComplete
                                     }
                                     variant="filled"
                                     className={"w-full font-bold"}
                                 >
                                     {needsInitialPayment
                                         ? "Pay Contract Deposit"
-                                        : data?.jobStatus === "completed"
+                                        : isProjectComplete
                                             ? "Pay Now"
                                             : contract?.status === "pending_signature"
                                                 ? "Awaiting contract approval"
@@ -348,7 +365,7 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                                 <span
                                     className={`px-3 py-1 rounded-full text-sm ${statusStyles[data?.jobStatus]}`}
                                 >
-                                    {data?.jobStatus?.replace("_", " ")}
+                                    {isProjectComplete ? "completed" : data?.jobStatus?.replace("_", " ")}
                                 </span>
                             </div>
                         </div>
@@ -356,7 +373,7 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                 </div>
 
                 {/* Additional Info Section */}
-                {data?.jobStatus === "completed" && (
+                {isProjectComplete && (
                     <div className="mt-6 bg-blue-50 p-4 rounded-lg">
                         <div className="flex items-center gap-3">
                             <svg
@@ -374,9 +391,10 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
                             </svg>
                             <p className="text-blue-800">
                                 This project was successfully completed on{" "}
-                                {new Date(
-                                    data.workEndedAt,
-                                ).toLocaleDateString()}
+                                {data?.workEndedAt
+                                    ? new Date(data.workEndedAt).toLocaleDateString()
+                                    : "the completion date"}
+                                .
                             </p>
                         </div>
                     </div>
@@ -385,4 +403,5 @@ function JobOverview({ jobId, jobData, isSelectedFreelancer }) {
         </div>
     );
 }
+
 export default JobOverview;

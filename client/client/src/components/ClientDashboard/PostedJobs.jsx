@@ -9,7 +9,8 @@ import {
     FiLoader, 
     FiBriefcase, 
     FiPlus, 
-    FiMoreVertical 
+    FiMoreVertical,
+    FiStar 
 } from "react-icons/fi";
 import api from "../../utils/api";
 import toast from "react-hot-toast";
@@ -129,9 +130,23 @@ const PostedJobs = ({ showPostJobModalFn }) => {
                                                 <div className="w-5 h-5 rounded-full bg-slate-100 flex items-center justify-center text-[9px] font-bold">
                                                     {job?.acceptedFreelancer?.name?.firstName?.charAt(0) || "U"}
                                                 </div>
-                                                {job?.acceptedFreelancer 
-                                                    ? `${job?.acceptedFreelancer?.name?.firstName} ${job?.acceptedFreelancer?.name?.lastName}`
-                                                    : "Unassigned"}
+                                                <span className="flex flex-col leading-tight">
+                                                    <span>
+                                                        {job?.acceptedFreelancer 
+                                                            ? `${job?.acceptedFreelancer?.name?.firstName} ${job?.acceptedFreelancer?.name?.lastName}`
+                                                            : "Unassigned"}
+                                                    </span>
+                                                    {job?.acceptedFreelancer && (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700">
+                                                            <FiStar className="fill-current" />
+                                                            <span>
+                                                                {Number(job?.acceptedFreelancer?.rating || 0) > 0
+                                                                    ? Number(job.acceptedFreelancer.rating).toFixed(1)
+                                                                    : "N/A"}
+                                                            </span>
+                                                        </span>
+                                                    )}
+                                                </span>
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">

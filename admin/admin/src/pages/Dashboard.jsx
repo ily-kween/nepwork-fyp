@@ -50,39 +50,36 @@ function Dashboard() {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] pb-24">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary/5 pb-24">
             {/* Admin Header */}
-            <header className="bg-slate-900 pt-8 pb-24 px-6 md:px-12 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -mr-48 -mt-48 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] -ml-40 -mb-40 pointer-events-none"></div>
-                
-                <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-10">
-                    <div className="space-y-4 text-center md:text-left">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-xl border border-white/5">
-                            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">System Online</span>
+            <header className="bg-white border-b border-gray-200 pt-8 pb-8 px-6 md:px-12">
+                <div className="max-w-7xl mx-auto space-y-8">
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-xl border border-primary/20">
+                            <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-primary">System Online</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">Command Center</h1>
-                        <p className="text-slate-400 font-medium">Global platform oversight and administrative controls.</p>
+                        <div>
+                            <h1 className="text-3xl md:text-4xl font-black text-slate-900">Dashboard</h1>
+                            <p className="text-slate-600 font-medium mt-2">Manage and oversee all KYC verification submissions.</p>
+                        </div>
                     </div>
 
-                    <div className="w-full md:w-[480px]">
+                    {/* Search Bar */}
+                    <div className="w-full max-w-md">
                         <div className="relative group">
-                            <div className="absolute inset-0 bg-primary/20 rounded-[24px] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            <div className="relative bg-white/10 backdrop-blur-md border border-white/10 p-2 rounded-[24px] flex items-center shadow-2xl focus-within:bg-white/15 focus-within:border-primary/50 transition-all">
-                                <div className="pl-6 text-white/50">
-                                    <FiSearch className="text-xl" />
+                            <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                            <div className="relative bg-white border border-gray-300 p-2 rounded-xl flex items-center shadow-sm focus-within:shadow-md focus-within:border-primary transition-all">
+                                <div className="pl-4 text-gray-400">
+                                    <FiSearch className="text-lg" />
                                 </div>
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search users, IDs, or transactions..."
-                                    className="w-full bg-transparent border-none outline-none text-white placeholder-white/40 px-6 py-4 font-medium"
+                                    placeholder="Search users or submissions..."
+                                    className="w-full bg-transparent border-none outline-none text-slate-900 placeholder-gray-400 px-4 py-3 font-medium"
                                 />
-                                <button className="bg-primary text-white p-4 rounded-xl shadow-lg hover:shadow-primary/50 hover:bg-emerald-400 transition-all active:scale-95">
-                                    <FiSearch />
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -90,7 +87,7 @@ function Dashboard() {
             </header>
 
             {/* Core Metrics Grid */}
-            <main className="max-w-7xl mx-auto px-6 md:px-12 -mt-12 relative z-20 space-y-12">
+            <main className="max-w-7xl mx-auto px-6 md:px-12 py-12 space-y-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <MetricCard 
                         title="Total Submissions" 
@@ -111,34 +108,36 @@ function Dashboard() {
                         value={stats.verified} 
                         trend="Cleared Operations" 
                         icon={<FiCheckCircle />} 
-                        color="emerald" 
+                        color="primary" 
                     />
                     <MetricCard 
                         title="Failed Checks" 
                         value={stats.failed} 
                         trend="Rejected Documents" 
                         icon={<FiXCircle />} 
-                        color="indigo" 
+                        color="red" 
                     />
                 </div>
 
                 {/* Operations Grid */}
                 <div>
                     <div className="flex items-center gap-3 mb-8">
-                        <FiDatabase className="text-slate-400 text-xl" />
-                        <h2 className="text-xl font-black text-slate-900">Platform Operations</h2>
+                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                            <FiDatabase className="text-xl" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900">Platform Operations</h2>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* KYC Management Route */}
                         <div 
                             onClick={() => navigate("/kycs")}
-                            className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:border-primary/20 transition-all cursor-pointer group hover:-translate-y-1"
+                            className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group hover:-translate-y-1"
                         >
                             <div className="flex justify-between items-start mb-8">
-                                <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 text-2xl group-hover:scale-110 transition-transform group-hover:bg-amber-100">
+                                <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 text-2xl group-hover:scale-110 transition-transform group-hover:bg-amber-100">
                                     <FiAlertCircle />
                                 </div>
-                                <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
+                                <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
                                     <FiChevronRight />
                                 </div>
                             </div>
@@ -146,18 +145,19 @@ function Dashboard() {
                                 <h3 className="text-xl font-black text-slate-900 group-hover:text-primary transition-colors">KYC Verification</h3>
                                 <p className="text-sm font-medium text-slate-500">Review and approve government documents for user onboarding compliance.</p>
                             </div>
-                            <div className="mt-8 pt-6 border-t border-slate-50 flex items-center justify-between">
+                            <div className="mt-8 pt-6 border-t border-gray-200 flex items-center justify-between">
                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority Queue</span>
                                 <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs font-black">{stats.pending} Pending</span>
                             </div>
                         </div>
 
-                        <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100 shadow-inner group relative overflow-hidden">
+                        {/* User Management - Coming Soon */}
+                        <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200 shadow-sm group relative overflow-hidden">
                             <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="px-4 py-2 bg-slate-900 text-white text-xs font-black tracking-widest uppercase rounded-xl shadow-2xl">Coming Soon</span>
+                                <span className="px-4 py-2 bg-slate-900 text-white text-xs font-black tracking-widest uppercase rounded-lg shadow-lg">Coming Soon</span>
                             </div>
                             <div className="flex justify-between items-start mb-8 opacity-60">
-                                <div className="w-16 h-16 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-500 text-2xl">
+                                <div className="w-16 h-16 bg-gray-200 rounded-2xl flex items-center justify-center text-gray-500 text-2xl">
                                     <FiUsers />
                                 </div>
                             </div>
@@ -167,12 +167,13 @@ function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="bg-slate-50 rounded-[32px] p-8 border border-slate-100 shadow-inner group relative overflow-hidden">
+                        {/* Financial Reports - Coming Soon */}
+                        <div className="bg-gray-50 rounded-2xl p-8 border border-gray-200 shadow-sm group relative overflow-hidden">
                             <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span className="px-4 py-2 bg-slate-900 text-white text-xs font-black tracking-widest uppercase rounded-xl shadow-2xl">Coming Soon</span>
+                                <span className="px-4 py-2 bg-slate-900 text-white text-xs font-black tracking-widest uppercase rounded-lg shadow-lg">Coming Soon</span>
                             </div>
                             <div className="flex justify-between items-start mb-8 opacity-60">
-                                <div className="w-16 h-16 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-500 text-2xl">
+                                <div className="w-16 h-16 bg-gray-200 rounded-2xl flex items-center justify-center text-gray-500 text-2xl">
                                     <FiTrendingUp />
                                 </div>
                             </div>
@@ -189,16 +190,32 @@ function Dashboard() {
 }
 
 const MetricCard = ({ title, value, trend, icon, color }) => {
-    const bgColor = {
-        indigo: 'bg-indigo-50 text-indigo-500',
-        amber: 'bg-amber-50 text-amber-500',
-        emerald: 'bg-emerald-50 text-emerald-500',
-        blue: 'bg-blue-50 text-blue-500'
-    }[color] || 'bg-slate-50 text-slate-500';
+    const styles = {
+        blue: {
+            bg: 'bg-blue-50',
+            text: 'text-blue-600',
+            border: 'border-blue-100'
+        },
+        amber: {
+            bg: 'bg-amber-50',
+            text: 'text-amber-600',
+            border: 'border-amber-100'
+        },
+        primary: {
+            bg: 'bg-primary/10',
+            text: 'text-primary',
+            border: 'border-primary/20'
+        },
+        red: {
+            bg: 'bg-red-50',
+            text: 'text-red-600',
+            border: 'border-red-100'
+        }
+    }[color] || { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-100' };
 
     return (
-        <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xl shadow-slate-900/5 flex items-center gap-6 group hover:-translate-y-1 transition-transform">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl ${bgColor} group-hover:scale-110 transition-transform`}>
+        <div className={`bg-white rounded-2xl p-6 border border-gray-200 shadow-sm flex items-center gap-6 group hover:shadow-md hover:border-primary/20 transition-all`}>
+            <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-2xl ${styles.bg} ${styles.text} group-hover:scale-110 transition-transform`}>
                 {icon}
             </div>
             <div>
