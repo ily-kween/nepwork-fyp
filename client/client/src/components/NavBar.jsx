@@ -57,8 +57,63 @@ function NavBar() {
                         />
                     </div>
 
-                    {/* Spacer - Center */}
-                    <div className="flex-1"></div>
+                    {/* Navigation Links - Center */}
+                    <div className="flex items-center gap-1 sm:gap-4 lg:gap-8 flex-1 justify-center">
+                        <NavLink
+                            to="/"
+                            className={({ isActive }) =>
+                                `${navItemStyle} ${isActive ? activeNavItemStyle : inactiveNavItemStyle}`
+                            }
+                        >
+                            <GoHome className="text-xl" />
+                            <span className="text-sm font-medium hidden lg:inline">Home</span>
+                            {location.pathname === "/" && (
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full"></div>
+                            )}
+                        </NavLink>
+
+                        <NavLink
+                            to="/dashboard"
+                            className={({ isActive }) =>
+                                `${navItemStyle} ${isActive ? activeNavItemStyle : inactiveNavItemStyle}`
+                            }
+                        >
+                            <MdOutlineSpaceDashboard className="text-xl" />
+                            <span className="text-sm font-medium hidden lg:inline">Dashboard</span>
+                            {location.pathname === "/dashboard" && (
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full"></div>
+                            )}
+                        </NavLink>
+
+                        <NavLink
+                            to="/inbox"
+                            className={({ isActive }) =>
+                                `${navItemStyle} ${isActive ? activeNavItemStyle : inactiveNavItemStyle}`
+                            }
+                        >
+                            <HiOutlineChatAlt2 className="text-xl" />
+                            <span className="text-sm font-medium hidden lg:inline">Inbox</span>
+                            {location.pathname === "/inbox" && (
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full"></div>
+                            )}
+                        </NavLink>
+
+                        <NavLink
+                            to="/projects-workspace"
+                            className={({ isActive }) =>
+                                `${navItemStyle} ${isActive ? activeNavItemStyle : inactiveNavItemStyle}`
+                            }
+                        >
+                            <FiBriefcase className="text-xl" />
+                            <span className="text-sm font-medium hidden lg:inline">Workspace</span>
+                            {location.pathname === "/projects-workspace" && (
+                                <div className="absolute bottom-0 left-0 w-full h-0.5 bg-primary rounded-t-full"></div>
+                            )}
+                        </NavLink>
+                    </div>
+
+                    {/* Mobile Spacer (Now handled by flex-1 above) */}
+                    <div className="md:hidden flex-shrink-0"></div>
 
                     {/* Right-aligned Icons */}
                     <div className="flex items-center gap-2 sm:gap-3 ml-auto">
@@ -133,6 +188,18 @@ function NavBar() {
                             }
                         >
                             Home
+                        </NavLink>
+                        <NavLink
+                            to="/"
+                            className="px-3 py-1.5 rounded-full text-sm sm:text-base text-secondaryText hover:text-primary hover:bg-secondary transition-colors duration-200"
+                        >
+                            Explore
+                        </NavLink>
+                        <NavLink
+                            to="/"
+                            className="px-3 py-1.5 rounded-full text-sm sm:text-base text-secondaryText hover:text-primary hover:bg-secondary transition-colors duration-200"
+                        >
+                            How it works
                         </NavLink>
 
                         <div className="flex gap-2 sm:gap-3">

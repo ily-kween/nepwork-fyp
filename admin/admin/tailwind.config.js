@@ -15,24 +15,29 @@ export default {
                 custom_shadow: "4px 0px 2px 0px rgba(0, 0, 0, 0.3)",
             },
             colors: {
-                // New brand theme colors
-                primary: "#1E40AF",      // Primary: Blue
-                secondary: "#64748B",    // Secondary: Slate Gray
-                tertiray: "#10B981",     // Tertiary: Emerald Green
-                //red
+                // Synchronized with Client Panel Theme
+                primary: "#009400",      // Primary: Green
+                secondary: "#EDEDED",    // Gray
+                tertiary: "#FFFFFF",     // White
                 danger: "#d64343",
-                //white text
                 primaryText: "#FFFFFF",
-                //black text
                 secondaryText: "#505050",
-
+                lightgreen: "#d5ffcb",
+                grey_border: "#e6e6e6",
+                grey_text: "#919191",
+                green_button: "#009400",
+                green_border: "#009400",
+                hover_button: "#4CB44C",
                 error_color: "#cb3b3b",
-
-                green_border: "#10B981",
-                hover_button: "#059669",
-                focus_color: "#10B981",
+                focus_color: "#4CB44C",
                 nav_border_color: "#AEAEAE",
-                greentext: "#10B981",
+                blacktext: "#505050",
+                whitetext: "#FFFFFF",
+                light_background: "#EFEFEF",
+                greentext: "#009400",
+            },
+            fontFamily: {
+                sans: ["Poppins", "ui-sans-serif", "system-ui"],
             },
         },
     },

@@ -1,5 +1,5 @@
 import React from "react";
-import { FiSearch } from "react-icons/fi";
+import { HiOutlineMagnifyingGlass } from "react-icons/hi2";
 
 function PageHeader({
     title,
@@ -45,7 +45,7 @@ function PageHeader({
                             <div className="absolute inset-0 bg-primary/20 rounded-xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
                             <div className="relative bg-white border border-gray-300 p-2 rounded-xl flex items-center shadow-sm focus-within:shadow-md focus-within:border-primary transition-all">
                                 <div className="pl-4 text-gray-400">
-                                    <FiSearch className="text-lg" />
+                                    <HiOutlineMagnifyingGlass className="text-lg" />
                                 </div>
                                 <input
                                     type="text"
@@ -55,7 +55,7 @@ function PageHeader({
                                     className="w-full bg-transparent border-none outline-none text-slate-900 placeholder-gray-400 px-4 py-3 font-medium"
                                 />
                                 <button className="bg-primary text-white p-3 rounded-lg shadow-sm hover:shadow-md hover:bg-primary/90 transition-all active:scale-95">
-                                    <FiSearch />
+                                    <HiOutlineMagnifyingGlass />
                                 </button>
                             </div>
                         </div>

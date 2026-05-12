@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from "react-router";
-import { NavBar, Loader } from "./components";
+import { Loader, Sidebar } from "./components";
 import { Toaster } from "react-hot-toast";
 import { api } from "./utils";
 import { useAuth, useUser } from "./stores";
@@ -40,10 +40,12 @@ function Layout() {
                         </strong>
                     </p>
                 </div>
-                <div className="hidden tablet:block">
-                    <NavBar />
-                    <div className="pt-20">
-                        <Outlet />
+                <div className="hidden tablet:block min-h-screen bg-gray-50">
+                    <Sidebar />
+                    <div className="ml-64 p-8 min-h-screen">
+                        <div className="max-w-7xl mx-auto">
+                            <Outlet />
+                        </div>
                     </div>
                 </div>
             </>

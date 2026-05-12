@@ -5,17 +5,17 @@ import { Button } from "../components";
 import PageHeader from "../components/PageHeader";
 import toast from "react-hot-toast";
 import { 
-    FiMail, 
-    FiUser, 
-    FiPhone, 
-    FiMapPin, 
-    FiCalendar, 
-    FiShield,
-    FiCheck,
-    FiX,
-    FiSave,
-    FiEdit2
-} from "react-icons/fi";
+    HiOutlineEnvelope, 
+    HiOutlineUser, 
+    HiOutlinePhone, 
+    HiOutlineMapPin, 
+    HiOutlineCalendarDays, 
+    HiOutlineShieldCheck,
+    HiOutlineCheck,
+    HiOutlineXMark,
+    HiOutlineArrowDownOnSquare,
+    HiOutlinePencilSquare
+} from "react-icons/hi2";
 
 function Profile() {
     const { userData } = useAuth();
@@ -85,7 +85,7 @@ function Profile() {
                         
                         <div className="relative z-10 flex flex-col items-center gap-6">
                             <div className="w-24 h-24 bg-gradient-to-br from-primary to-emerald-600 rounded-2xl flex items-center justify-center text-white text-4xl shadow-lg">
-                                <FiShield />
+                                <HiOutlineShieldCheck />
                             </div>
                             <div>
                                 <h2 className="text-3xl font-black text-slate-900">{userData?.name || "Admin"}</h2>
@@ -100,7 +100,7 @@ function Profile() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-primary/10 rounded-2xl border border-primary/20">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary text-xl">
-                                    <FiCheck />
+                                    <HiOutlineCheck />
                                 </div>
                                 <div>
                                     <p className="text-sm text-slate-600 font-medium">Account Status</p>
@@ -109,7 +109,7 @@ function Profile() {
                             </div>
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary text-xl">
-                                    <FiCalendar />
+                                    <HiOutlineCalendarDays />
                                 </div>
                                 <div>
                                     <p className="text-sm text-slate-600 font-medium">Member Since</p>
@@ -126,7 +126,7 @@ function Profile() {
                                     onClick={() => setIsEditing(!isEditing)}
                                     className="flex items-center gap-2 px-6 py-3 bg-primary/10 text-primary rounded-xl hover:bg-primary/20 transition-colors font-bold"
                                 >
-                                    <FiEdit2 />
+                                    <HiOutlinePencilSquare />
                                     {isEditing ? "Cancel" : "Edit"}
                                 </button>
                             </div>
@@ -146,7 +146,7 @@ function Profile() {
                                         />
                                     ) : (
                                         <div className="flex items-center gap-3 px-6 py-4 bg-gray-50 rounded-xl border border-gray-200">
-                                            <FiUser className="text-gray-400 text-xl" />
+                                            <HiOutlineUser className="text-gray-400 text-xl" />
                                             <p className="font-medium text-slate-900">{formData.name}</p>
                                         </div>
                                     )}
@@ -156,7 +156,7 @@ function Profile() {
                                 <div className="space-y-3">
                                     <label className="block text-sm font-bold text-slate-700 uppercase tracking-wide">Email Address</label>
                                     <div className="flex items-center gap-3 px-6 py-4 bg-gray-50 rounded-xl border border-gray-200 cursor-not-allowed">
-                                        <FiMail className="text-gray-400 text-xl" />
+                                        <HiOutlineEnvelope className="text-gray-400 text-xl" />
                                         <p className="font-medium text-slate-900">{formData.email}</p>
                                         <span className="ml-auto text-[10px] font-black text-gray-500 uppercase">Read-Only</span>
                                     </div>
@@ -176,7 +176,7 @@ function Profile() {
                                         />
                                     ) : (
                                         <div className="flex items-center gap-3 px-6 py-4 bg-gray-50 rounded-xl border border-gray-200">
-                                            <FiPhone className="text-gray-400 text-xl" />
+                                            <HiOutlinePhone className="text-gray-400 text-xl" />
                                             <p className="font-medium text-slate-900">{formData.phone || "Not provided"}</p>
                                         </div>
                                     )}
@@ -196,7 +196,7 @@ function Profile() {
                                         />
                                     ) : (
                                         <div className="flex items-center gap-3 px-6 py-4 bg-gray-50 rounded-xl border border-gray-200">
-                                            <FiMapPin className="text-gray-400 text-xl" />
+                                            <HiOutlineMapPin className="text-gray-400 text-xl" />
                                             <p className="font-medium text-slate-900">{formData.location || "Not provided"}</p>
                                         </div>
                                     )}
@@ -233,7 +233,7 @@ function Profile() {
                                     disabled={isSaving}
                                     className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50"
                                 >
-                                    <FiSave />
+                                    <HiOutlineArrowDownOnSquare />
                                     {isSaving ? "Saving..." : "Save Changes"}
                                 </button>
                                 <button

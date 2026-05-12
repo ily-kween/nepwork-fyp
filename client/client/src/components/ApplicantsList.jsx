@@ -149,7 +149,7 @@ function ApplicantsList({ currentJobData, userData, refetchJobFn }) {
 
                     {/* Content Section */}
                     <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-baseline gap-2">
+                        <div className="flex items-center justify-between gap-2">
                             <Link
                                 to={`/profile/${applicantData.appliedBy._id}`}
                                 className="text-lg font-semibold text-gray-900 hover:text-blue-600 hover:underline truncate"
@@ -161,6 +161,17 @@ function ApplicantsList({ currentJobData, userData, refetchJobFn }) {
                                     applicantData.appliedBy?.name?.lastName || applicantData.appliedBy?.lastName || '',
                                 )}
                             </Link>
+
+                            {applicantData.recommendationScore > 0 && (
+                                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-tighter shadow-sm ${
+                                    applicantData.recommendationScore >= 80 ? "text-emerald-600 bg-emerald-50 border-emerald-100" :
+                                    applicantData.recommendationScore >= 50 ? "text-blue-600 bg-blue-50 border-blue-100" :
+                                    "text-slate-500 bg-slate-50 border-slate-100"
+                                }`}>
+                                    <div className="w-1 h-1 rounded-full bg-current animate-pulse"></div>
+                                    {Math.round(applicantData.recommendationScore)}% Match
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-gray-600">
                             <HiOutlineClock className="w-4 h-4 flex-shrink-0" />

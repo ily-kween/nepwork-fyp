@@ -67,9 +67,18 @@ function FreelancerCard({
         <div className="group w-full bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500 overflow-hidden flex flex-col relative">
 
 
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest border border-amber-200">
-                <FiStar className="fill-current" />
-                <span>{displayRating.toFixed(1)}</span>
+            <div className="absolute top-4 right-4 z-10 flex flex-col items-end gap-2">
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-widest border border-amber-200 shadow-sm">
+                    <FiStar className="fill-current" />
+                    <span>{displayRating.toFixed(1)}</span>
+                </div>
+
+                {recommendationScore > 0 && (
+                    <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-md transition-all duration-300 transform hover:scale-105 ${getScoreColor(recommendationScore)}`}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></div>
+                        <span className="text-[10px] font-black uppercase tracking-widest">{Math.round(recommendationScore)}% Match</span>
+                    </div>
+                )}
             </div>
 
             {/* Top Branding Strip */}

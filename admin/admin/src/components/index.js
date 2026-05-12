@@ -4,4 +4,5 @@ import Loader from "./Loader";
 import NavBar from "./NavBar";
 import Protected from "./Protected";
 import PageHeader from "./PageHeader";
-export { Loader, NavBar, Button, Protected, KycList, PageHeader };
+import Sidebar from "./Sidebar";
+export { Loader, NavBar, Button, Protected, KycList, PageHeader, Sidebar };

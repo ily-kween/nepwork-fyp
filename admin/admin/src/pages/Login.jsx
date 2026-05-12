@@ -4,7 +4,13 @@ import { useForm } from "react-hook-form";
 import { useAuth, useUser } from "../stores";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
-import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
+import { 
+    HiOutlineEnvelope, 
+    HiOutlineLockClosed, 
+    HiOutlineEye, 
+    HiOutlineEyeSlash, 
+    HiOutlineArrowRight 
+} from "react-icons/hi2";
 
 function Login() {
     const navigate = useNavigate();
@@ -88,7 +94,7 @@ function Login() {
                                 Email Address
                             </label>
                             <div className="relative">
-                                <FiMail className="absolute text-lg text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
+                                <HiOutlineEnvelope className="absolute text-lg text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
                                 <input
                                     type="email"
                                     id="email"
@@ -116,7 +122,7 @@ function Login() {
                                 Password
                             </label>
                             <div className="relative">
-                                <FiLock className="absolute text-lg text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
+                                <HiOutlineLockClosed className="absolute text-lg text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     id="password"
@@ -135,7 +141,7 @@ function Login() {
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute text-gray-400 transition-colors transform -translate-y-1/2 right-4 top-1/2 hover:text-gray-600"
                                 >
-                                    {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+                                    {showPassword ? <HiOutlineEyeSlash className="text-lg" /> : <HiOutlineEye className="text-lg" />}
                                 </button>
                             </div>
                             {errors.password && (
@@ -167,7 +173,7 @@ function Login() {
                             ) : (
                                 <>
                                     Sign In
-                                    <FiArrowRight className="text-lg" />
+                                    <HiOutlineArrowRight className="text-lg" />
                                 </>
                             )}
                         </button>

@@ -1,8 +1,11 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router";
 import { useAuth } from "../stores/Auth";
-import { MdOutlineSpaceDashboard } from "react-icons/md";
-import { FiLogOut, FiShield } from "react-icons/fi";
+import { 
+    HiOutlineArrowLeftOnRectangle, 
+    HiOutlineShieldCheck,
+    HiOutlineViewColumns
+} from "react-icons/hi2";
 
 function NavBar() {
     const isLoggedIn = useAuth((state) => state.isLoggedIn);
@@ -38,7 +41,7 @@ function NavBar() {
                             }`
                         }
                     >
-                        <MdOutlineSpaceDashboard className="w-5 h-5" />
+                        <HiOutlineViewColumns className="w-5 h-5" />
                         <span>Dashboard</span>
                     </NavLink>
 
@@ -52,7 +55,7 @@ function NavBar() {
                             }`
                         }
                     >
-                        <FiShield className="w-5 h-5" />
+                        <HiOutlineShieldCheck className="w-5 h-5" />
                         <span>KYC Verification</span>
                     </NavLink>
                 </div>
@@ -62,7 +65,7 @@ function NavBar() {
                     onClick={() => navigate("/logout")}
                     className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all font-semibold text-sm border border-red-200 hover:border-red-300"
                 >
-                    <FiLogOut className="w-5 h-5" />
+                    <HiOutlineArrowLeftOnRectangle className="w-5 h-5" />
                     <span>Logout</span>
                 </button>
             </div>
