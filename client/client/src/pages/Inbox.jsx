@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { format, differenceInHours, parseISO } from "date-fns";
 import { useNavigate } from "react-router";
-import { useAuth, useChat } from "../stores";
+import { useAuth, useChat, usePostedJobs, useFreelancerJobs } from "../stores";
 import default_avatar from "../assets/default_avatar.svg";
 import capitalize from "../utils/capitalize.js";
 import { Button, ConfirmModal } from "../components";
@@ -35,6 +35,8 @@ export default function Inbox() {
         setUserOffline,
         setUserOnline,
     } = useChat();
+    const { jobs: postedJobs, fetchPostedJobs } = usePostedJobs();
+    const { jobs: freelancerJobs, fetchFreelancerJobs } = useFreelancerJobs();
     const [showNewChatModal, setShowNewChatModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [text, setText] = useState("");
@@ -59,8 +61,10 @@ export default function Inbox() {
     };
 
     const handleAddNewChat = (user) => {
+        // support both connection wrapper { userId: {...} } and plain user objects
+        const target = user.userId ? user.userId : user;
         const chatExistsIndex = chats.findIndex((chat) =>
-            [chat.userOne._id, chat.userTwo._id].includes(user.userId._id),
+            [chat.userOne._id, chat.userTwo._id].includes(target._id),
         );
 
         if (chatExistsIndex >= 0) {
@@ -73,7 +77,7 @@ export default function Inbox() {
                 unreadOne: 0,
                 unreadTwo: 0,
                 userOne: currentUser,
-                userTwo: user.userId,
+                userTwo: target,
             });
         }
         setShowNewChatModal(false);
@@ -158,6 +162,12 @@ export default function Inbox() {
     useEffect(() => {
         setChats();
         setConnections();
+
+        if (currentUser?.role === "client") {
+            fetchPostedJobs();
+        } else if (currentUser?.role === "freelancer") {
+            fetchFreelancerJobs();
+        }
     }, []);
 
     useEffect(() => {
@@ -180,6 +190,33 @@ export default function Inbox() {
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [selectedChat?.messages?.length]);
+
+    // Compute users the current user has worked with
+    const workedSet = new Set();
+    let workedUsers = [];
+    if (currentUser?.role === "client") {
+        (postedJobs || []).forEach(job => {
+            if (job?.acceptedFreelancer?._id) {
+                workedSet.add(job.acceptedFreelancer._id);
+                workedUsers.push(job.acceptedFreelancer);
+            }
+        });
+    } else if (currentUser?.role === "freelancer") {
+        (freelancerJobs || []).forEach(job => {
+            if (job?.postedBy?._id) {
+                workedSet.add(job.postedBy._id);
+                workedUsers.push(job.postedBy);
+            }
+        });
+    }
+    // dedupe by _id
+    const seen = new Set();
+    workedUsers = workedUsers.filter(u => {
+        if (!u || !u._id) return false;
+        if (seen.has(u._id)) return false;
+        seen.add(u._id);
+        return true;
+    });
 
     return (
         <div className="flex bg-gray-50 w-full h-screen overflow-hidden">
@@ -222,6 +259,30 @@ export default function Inbox() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
+                    </div>
+                </div>
+
+                {/* Connections: show users (worked-with) without searching */}
+                <div className="px-3 pb-4 border-t border-slate-100">
+                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">{currentUser?.role === 'client' ? 'Freelancers you worked with' : 'Clients you worked with'}</h4>
+                    <div className="space-y-2">
+                        {workedUsers.length === 0 ? (
+                            <div className="text-xs text-slate-400">No past collaborators yet</div>
+                        ) : (
+                            workedUsers.slice(0, 8).map((u) => (
+                                <button
+                                    key={u._id}
+                                    onClick={() => handleAddNewChat(u)}
+                                    className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition-all text-left"
+                                >
+                                    <img src={u.avatar || default_avatar} className="w-9 h-9 rounded-lg object-cover" alt="" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-sm font-medium truncate">{capitalize(u.name?.firstName)} {capitalize(u.name?.lastName)}</div>
+                                        <div className="text-xs text-slate-400">{u.online ? 'Active now' : formatLastSeen(u.lastSeen)}</div>
+                                    </div>
+                                </button>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -440,48 +501,70 @@ export default function Inbox() {
                         </div>
                         
                         <div className="overflow-y-auto max-h-[400px] custom-scrollbar p-4">
-                            {users
-                                .filter(user => 
-                                    `${user.userId.name.firstName} ${user.userId.name.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                                    user.userId._id !== currentUser._id
-                                )
-                                .length === 0 ? (
-                                    <div className="py-12 text-center opacity-40">
-                                        <p className="text-sm font-bold uppercase tracking-widest">No connections found</p>
-                                    </div>
-                                ) : (
-                                    users
-                                        .filter(user => 
-                                            `${user.userId.name.firstName} ${user.userId.name.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) &&
-                                            user.userId._id !== currentUser._id
-                                        )
-                                        .map((user) => (
-                                            <button
-                                                key={user._id}
-                                                onClick={() => handleAddNewChat(user)}
-                                                className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 transition-all text-left"
-                                            >
-                                                <div className="relative">
-                                                    <img
-                                                        src={user.userId.avatar || default_avatar}
-                                                        className="w-12 h-12 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all"
-                                                        alt=""
-                                                    />
-                                                    {user.userId.online && (
-                                                        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 border-4 border-white rounded-full"></span>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-black text-sm text-gray-900 truncate">
-                                                        {capitalize(user.userId.name.firstName)} {capitalize(user.userId.name.lastName)}
-                                                    </h4>
-                                                    <p className="text-xs text-gray-500">
-                                                        {user.userId.online ? "Active Now" : `Last seen ${formatLastSeen(user.userId.lastSeen)}`}
-                                                    </p>
-                                                </div>
-                                            </button>
-                                        ))
-                                )}
+                            {(() => {
+                                const workedSet = new Set();
+                                if (currentUser?.role === "client") {
+                                    (postedJobs || []).forEach(job => {
+                                        if (job?.acceptedFreelancer?._id) workedSet.add(job.acceptedFreelancer._id);
+                                    });
+                                } else if (currentUser?.role === "freelancer") {
+                                    (freelancerJobs || []).forEach(job => {
+                                        if (job?.postedBy?._id) workedSet.add(job.postedBy._id);
+                                    });
+                                }
+
+                                const filtered = (users || [])
+                                    .map(u => ({
+                                        ...u,
+                                        _searchName: `${u.userId.name.firstName} ${u.userId.name.lastName}`.toLowerCase(),
+                                    }))
+                                    .filter(u => u._searchName.includes(searchQuery.toLowerCase()) && u.userId._id !== currentUser._id);
+
+                                if (filtered.length === 0) {
+                                    return (
+                                        <div className="py-12 text-center opacity-40">
+                                            <p className="text-sm font-bold uppercase tracking-widest">No connections found</p>
+                                        </div>
+                                    );
+                                }
+
+                                return filtered.map((user) => {
+                                    const worked = workedSet.has(user.userId._id);
+                                    return (
+                                        <button
+                                            key={user._id}
+                                            onClick={() => {
+                                                if (!worked) {
+                                                    toast.error("You can only start a chat with users you've worked with");
+                                                    return;
+                                                }
+                                                handleAddNewChat(user);
+                                            }}
+                                            disabled={!worked}
+                                            className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left ${!worked ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                                        >
+                                            <div className="relative">
+                                                <img
+                                                    src={user.userId.avatar || default_avatar}
+                                                    className="w-12 h-12 rounded-2xl object-cover ring-2 ring-transparent group-hover:ring-primary/20 transition-all"
+                                                    alt=""
+                                                />
+                                                {user.userId.online && (
+                                                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 border-4 border-white rounded-full"></span>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-black text-sm text-gray-900 truncate">
+                                                    {capitalize(user.userId.name.firstName)} {capitalize(user.userId.name.lastName)}
+                                                </h4>
+                                                <p className="text-xs text-gray-500">
+                                                    {user.userId.online ? "Active Now" : `Last seen ${formatLastSeen(user.userId.lastSeen)}`}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    );
+                                });
+                            })()}
                         </div>
                     </div>
                 </div>
